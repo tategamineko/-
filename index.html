@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>防災ポーチシミュレーター 〜ネットの裏技＆何を入れてどうなる実験ゲーム〜</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: M PLUS Rounded 1c & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"M PLUS Rounded 1c"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            pouch: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          },
+          keyframes: {
+            bounceSmall: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-4px)' }
+            },
+            shake: {
+              '0%, 100%': { transform: 'translateX(0)' },
+              '20%, 60%': { transform: 'translateX(-6px)' },
+              '40%, 80%': { transform: 'translateX(6px)' }
+            }
+          },
+          animation: {
+            bounceSmall: 'bounceSmall 1.5s infinite ease-in-out',
+            shake: 'shake 0.5s ease-in-out',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .pouch-pattern {
+      background-color: #fffaf5;
+      background-image: radial-gradient(#fdba74 0.75px, transparent 0.75px), radial-gradient(#fdba74 0.75px, #fffaf5 0.75px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  
+    /* ==========================================
+       レイアウトを絶対に崩さない文字サイズ切り替えシステム
+       (htmlのremは16pxのまま維持し、テキストのみpxで拡大)
+       ========================================== */
+    
+    /* 1. 標準サイズ (size-normal) */
+    body.size-normal .app-card-title { font-size: 16px; line-height: 1.4; }
+    body.size-normal .app-card-desc { font-size: 13.5px; line-height: 1.55; }
+    body.size-normal .app-card-meta { font-size: 12.5px; }
+    body.size-normal .app-badge { font-size: 12px; }
+    body.size-normal .app-tab { font-size: 13px; }
+    body.size-normal .app-pouch-item { font-size: 13px; }
+    body.size-normal .app-section-title { font-size: 18px; }
+    body.size-normal .app-sim-title { font-size: 24px; line-height: 1.35; }
+    body.size-normal .app-sim-desc { font-size: 16px; line-height: 1.6; }
+    body.size-normal .app-sim-head { font-size: 20px; line-height: 1.4; }
+    body.size-normal .app-sim-detail { font-size: 15px; line-height: 1.65; }
+    body.size-normal .app-btn { font-size: 16px; }
+
+    /* 2. 大サイズ (size-large) */
+    body.size-large .app-card-title { font-size: 18px; line-height: 1.4; }
+    body.size-large .app-card-desc { font-size: 15px; line-height: 1.6; }
+    body.size-large .app-card-meta { font-size: 13.5px; }
+    body.size-large .app-badge { font-size: 13px; }
+    body.size-large .app-tab { font-size: 14.5px; }
+    body.size-large .app-pouch-item { font-size: 14.5px; }
+    body.size-large .app-section-title { font-size: 20px; }
+    body.size-large .app-sim-title { font-size: 28px; line-height: 1.35; }
+    body.size-large .app-sim-desc { font-size: 18px; line-height: 1.6; }
+    body.size-large .app-sim-head { font-size: 24px; line-height: 1.4; }
+    body.size-large .app-sim-detail { font-size: 17px; line-height: 1.65; }
+    body.size-large .app-btn { font-size: 18px; }
+
+    /* 3. 特大サイズ (size-xlarge : デフォルト推奨) */
+    body.size-xlarge .app-card-title { font-size: 20px; line-height: 1.35; }
+    body.size-xlarge .app-card-desc { font-size: 16.5px; line-height: 1.6; }
+    body.size-xlarge .app-card-meta { font-size: 14.5px; }
+    body.size-xlarge .app-badge { font-size: 14px; }
+    body.size-xlarge .app-tab { font-size: 15.5px; }
+    body.size-xlarge .app-pouch-item { font-size: 15.5px; }
+    body.size-xlarge .app-section-title { font-size: 22px; }
+    body.size-xlarge .app-sim-title { font-size: 32px; line-height: 1.3; }
+    body.size-xlarge .app-sim-desc { font-size: 20px; line-height: 1.6; }
+    body.size-xlarge .app-sim-head { font-size: 27px; line-height: 1.35; }
+    body.size-xlarge .app-sim-detail { font-size: 19px; line-height: 1.65; }
+    body.size-xlarge .app-btn { font-size: 20px; }
+
+    /* 4. ZOOM極大サイズ (size-zoom) */
+    body.size-zoom .app-card-title { font-size: 23px; line-height: 1.35; }
+    body.size-zoom .app-card-desc { font-size: 18.5px; line-height: 1.6; }
+    body.size-zoom .app-card-meta { font-size: 16px; }
+    body.size-zoom .app-badge { font-size: 15px; }
+    body.size-zoom .app-tab { font-size: 17px; }
+    body.size-zoom .app-pouch-item { font-size: 17px; }
+    body.size-zoom .app-section-title { font-size: 25px; }
+    body.size-zoom .app-sim-title { font-size: 36px; line-height: 1.3; }
+    body.size-zoom .app-sim-desc { font-size: 22px; line-height: 1.6; }
+    body.size-zoom .app-sim-head { font-size: 30px; line-height: 1.35; }
+    body.size-zoom .app-sim-detail { font-size: 21px; line-height: 1.65; }
+    body.size-zoom .app-btn { font-size: 22px; }
+
+  </style>
+</head>
+<body class="size-large bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-pouch-200">
+
+  <!-- ヘッダー -->
+  <header class="bg-white/95 backdrop-blur border-b border-orange-100 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pouch-500 to-amber-400 text-white flex items-center justify-center shadow-sm shrink-0">
+          <i class="fa-solid fa-bag-shopping text-base"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg md:text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2 whitespace-nowrap">
+            防災ポーチシミュレーター
+            <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hidden sm:inline">裏技・実験版</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- 文字サイズ選択バー -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <span class="text-xs font-extrabold text-slate-500 px-2 hidden md:inline whitespace-nowrap">文字サイズ:</span>
+          <button onclick="changeTextSize('size-normal', this)" class="size-btn px-2.5 py-1 text-xs font-extrabold rounded-lg transition text-slate-600 hover:text-slate-900 whitespace-nowrap" data-size="size-normal">標準</button>
+          <button onclick="changeTextSize('size-large', this)" class="size-btn px-2.5 py-1 text-xs font-extrabold rounded-lg transition bg-orange-500 text-white shadow-xs whitespace-nowrap" data-size="size-large">大</button>
+          <button onclick="changeTextSize('size-xlarge', this)" class="size-btn px-2.5 py-1 text-xs font-extrabold rounded-lg transition text-slate-600 hover:text-slate-900 whitespace-nowrap" data-size="size-xlarge">特大</button>
+          <button onclick="changeTextSize('size-zoom', this)" class="size-btn px-2.5 py-1 text-xs font-extrabold rounded-lg transition text-slate-600 hover:text-slate-900 whitespace-nowrap" data-size="size-zoom">ZOOM極大</button>
+        </div>
+
+        <button id="btn-sound-toggle" onclick="toggleSound()" class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition flex items-center justify-center shrink-0" title="サウンド切り替え">
+          <i id="sound-icon" class="fa-solid fa-volume-high text-sm"></i>
+        </button>
+        <button onclick="openKnowledgeModal()" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition flex items-center gap-1 shadow-xs whitespace-nowrap shrink-0">
+          <i class="fa-solid fa-circle-question text-orange-500"></i>
+          <span>0次防災とは？</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メイン領域 -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-5 flex flex-col">
+
+    <!-- 画面1: スタート画面 -->
+    <section id="screen-intro" class="my-auto py-8 flex flex-col items-center text-center">
+      <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-900 px-4 py-1.5 rounded-full text-xs md:text-sm font-bold mb-4 shadow-sm">
+        <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+        <span>動画・SNSで話題の「案外これ神アイテム」も多数収録！</span>
+      </div>
+
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-4 tracking-tight leading-snug">
+        あなたのカバンに入れたいもの、<br class="sm:hidden"><span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500">全部入れて試してみよう！</span>
+      </h2>
+      <p class="app-card-desc text-slate-600 max-w-3xl mx-auto mb-8">
+        防災の基本グッズはもちろん、ネットで話題の裏技（ペットシーツ、靴擦れパッド、ジョーロキャップ、眉ペン、USB変換アダプタ等）やおもちゃ・突拍子もないネタまで**全80種類以上**！<br>
+        「これを持ち歩いていたらどうなる？」をリアル＆コミカルにシミュレーションします。
+      </p>
+
+      <!-- 特徴アイコンカード -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mb-8">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 text-left flex items-center gap-3.5 shadow-xs">
+          <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-lightbulb"></i>
+          </div>
+          <div>
+            <div class="text-xs font-black text-slate-800">ネットの裏技アイテム網羅</div>
+            <div class="text-xs text-slate-500">「実はこれ神！」なライフハック満載</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 text-left flex items-center gap-3.5 shadow-xs">
+          <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-shapes"></i>
+          </div>
+          <div>
+            <div class="text-xs font-black text-slate-800">全80種類以上のパレット</div>
+            <div class="text-xs text-slate-500">おもちゃからネタ・重量級まで自由</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 text-left flex items-center gap-3.5 shadow-xs">
+          <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-book-bookmark"></i>
+          </div>
+          <div>
+            <div class="text-xs font-black text-slate-800">全アイテム結末図鑑</div>
+            <div class="text-xs text-slate-500">入れた物すべての活躍・珍事を一覧化</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 開始ボタン -->
+      <button onclick="startPackingScreen()" class="app-btn px-8 py-4 bg-gradient-to-r from-orange-500 via-amber-500 to-pouch-600 hover:from-orange-600 hover:to-pouch-700 text-white font-black rounded-2xl shadow-lg shadow-orange-500/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 whitespace-nowrap">
+        <i class="fa-solid fa-bag-shopping text-xl"></i>
+        <span>自由にポーチを作ってみる！</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+    </section>
+
+    <!-- 画面2: ポーチ作成画面 -->
+    <section id="screen-packing" class="hidden flex-col gap-4">
+      
+      <!-- メイングリッド (左4 : 右8 で右側のカード幅を広く確保) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- 左カラム：ポーチ＆メーター -->
+        <div class="lg:col-span-4 flex flex-col gap-3 sticky lg:top-16">
+          
+          <div class="bg-white rounded-3xl border-2 border-orange-200 p-4 sm:p-5 shadow-sm relative overflow-hidden pouch-pattern">
+            
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="app-section-title font-black text-slate-800 whitespace-nowrap">🎒 あなたの防災ポーチ</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span id="pouch-item-count" class="app-badge font-extrabold text-orange-700 bg-orange-100 px-3 py-1 rounded-full whitespace-nowrap">
+                  0 個
+                </span>
+                <button onclick="clearPouch()" class="px-2.5 py-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-full transition whitespace-nowrap" title="すべて空にする">
+                  リセット
+                </button>
+              </div>
+            </div>
+
+            <!-- 容量メーター (サイズpt) -->
+            <div class="mb-2.5 bg-white/95 p-3 rounded-2xl border border-orange-100 shadow-xs">
+              <div class="flex justify-between items-center app-card-meta font-bold mb-1 gap-2">
+                <span class="text-slate-700 whitespace-nowrap">ポーチ容量</span>
+                <span id="meter-capacity-text" class="text-slate-800 whitespace-nowrap font-extrabold">0 / 18 pt</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div id="meter-capacity-bar" class="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-300 w-0"></div>
+              </div>
+              <p id="meter-capacity-alert" class="text-xs text-rose-600 font-bold mt-1 hidden">
+                ⚠️ 容量オーバー！チャックが閉まりません
+              </p>
+            </div>
+
+            <!-- 重量メーター (g) -->
+            <div class="mb-3 bg-white/95 p-3 rounded-2xl border border-orange-100 shadow-xs">
+              <div class="flex justify-between items-center app-card-meta font-bold mb-1 gap-2">
+                <span class="text-slate-700 whitespace-nowrap">総重量 (目安500g)</span>
+                <span id="meter-weight-text" class="text-slate-800 whitespace-nowrap font-extrabold">0 g</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div id="meter-weight-bar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 rounded-full transition-all duration-300 w-0"></div>
+              </div>
+              <p id="meter-weight-status" class="text-xs text-emerald-700 font-bold mt-1">
+                ✓ 身軽で毎日持てる重さ！
+              </p>
+            </div>
+
+            <!-- ポーチの中身リスト領域 (崩れないリスト型) -->
+            <div class="bg-white/95 rounded-2xl p-3 border border-orange-200/80 min-h-[180px] max-h-[320px] overflow-y-auto flex flex-col shadow-inner">
+              <div id="pouch-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2">
+                <!-- ポーチに入ったアイテム（横長タグ形式で崩れない） -->
+              </div>
+              <div id="pouch-empty-msg" class="my-auto text-center py-6 text-slate-400 app-card-meta">
+                <p class="font-bold">右の一覧からアイテムを選んで<br>ポーチに入れてください</p>
+              </div>
+            </div>
+
+            <!-- 出発ボタン -->
+            <button id="btn-start-sim" onclick="startSimulation()" class="app-btn w-full mt-3.5 py-3.5 px-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-lg shadow-orange-500/30 transition transform active:scale-98 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-play text-sm"></i>
+              <span>被災シミュレーション開始！</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- 右カラム：アイテム選択パレット -->
+        <div class="lg:col-span-8 flex flex-col gap-3">
+          
+          <!-- 検索バー & カテゴリ切り替え (折り返し表示で見やすく) -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col gap-3">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="item-search-input" oninput="handleSearch(this.value)" type="text" placeholder="アイテムを検索（例: ペットシーツ、ライト、トイレ、お菓子...）" class="app-card-desc w-full pl-10 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:border-orange-500 transition">
+              <button onclick="clearSearch()" id="btn-clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+            </div>
+
+            <!-- カテゴリタブ (flex-wrapで一覧表示、横スクロールなし) -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button onclick="filterCategory('all')" class="cat-tab app-tab active px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-slate-800 text-white transition" data-cat="all">すべて (<span id="count-all">80</span>)</button>
+              <button onclick="filterCategory('hack')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 transition" data-cat="hack">💡 裏技</button>
+              <button onclick="filterCategory('fun')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-purple-600 hover:bg-purple-50 border border-purple-200 transition" data-cat="fun">🧸 ホビー</button>
+              <button onclick="filterCategory('food')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-orange-600 hover:bg-orange-50 border border-orange-200 transition" data-cat="food">🍬 飲食</button>
+              <button onclick="filterCategory('comm')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-blue-600 hover:bg-blue-50 border border-blue-200 transition" data-cat="comm">📞 連絡</button>
+              <button onclick="filterCategory('safe')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-amber-600 hover:bg-amber-50 border border-amber-200 transition" data-cat="safe">🛡️ ライト・安全</button>
+              <button onclick="filterCategory('hygiene')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-emerald-600 hover:bg-emerald-50 border border-emerald-200 transition" data-cat="hygiene">🩹 衛生・トイレ</button>
+              <button onclick="filterCategory('warmth')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-sky-600 hover:bg-sky-50 border border-sky-200 transition" data-cat="warmth">🧥 防寒・雨具</button>
+              <button onclick="filterCategory('tool')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition" data-cat="tool">🔧 道具</button>
+              <button onclick="filterCategory('ng')" class="cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 transition" data-cat="ng">💣 ネタ・NG</button>
+            </div>
+          </div>
+
+          <!-- アイテムカード一覧グリッド (2列でゆったり表示、文字極大時は自動で1〜2列) -->
+          <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto pr-1">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 画面3: 被災シミュレーション画面 -->
+    <section id="screen-sim" class="hidden my-auto py-4 flex-col items-center max-w-4xl mx-auto w-full">
+      
+      <!-- シミュレーションヘッダー -->
+      <div class="w-full bg-slate-900 text-white p-5 sm:p-6 rounded-3xl shadow-xl relative overflow-hidden mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+            <span id="sim-event-type-badge" class="app-badge font-extrabold tracking-wider text-rose-400 uppercase">Disaster Event</span>
+          </div>
+          <span id="sim-step-badge" class="app-badge font-mono bg-slate-800 px-3 py-1 rounded-full border border-slate-700 whitespace-nowrap">
+            EVENT 1 / 6
+          </span>
+        </div>
+
+        <h3 id="sim-title" class="app-sim-title font-black text-white mb-2">
+          イベントタイトル
+        </h3>
+        <p id="sim-desc" class="app-sim-desc text-slate-200">
+          イベント詳細説明テキスト
+        </p>
+
+        <!-- サバイバル安心度バー -->
+        <div class="mt-4 pt-3.5 border-t border-slate-800 flex items-center justify-between gap-4 app-card-meta">
+          <span class="text-slate-300 font-bold whitespace-nowrap">安心・サバイバル度</span>
+          <div class="w-48 sm:w-64 h-3.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+            <div id="sim-hp-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500 w-full"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- イベント判定カード -->
+      <div id="sim-result-card" class="w-full bg-white p-5 sm:p-7 rounded-3xl border-2 border-slate-200 shadow-sm flex flex-col gap-4">
+        
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span id="sim-status-icon" class="hidden"></span>
+            <span id="sim-status-badge" class="app-badge font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 whitespace-nowrap">
+              ピンチ回避！
+            </span>
+            <span id="sim-combo-badge" class="hidden app-badge font-black px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap shadow-xs">
+              ✨ 複数アイテム連携！
+            </span>
+            <span id="sim-target-item-name" class="app-badge text-slate-600 font-extrabold">
+              アイテム名
+            </span>
+          </div>
+          <!-- 役立ったアイテム一覧タグ表示エリア -->
+          <div id="sim-matched-items-box" class="flex flex-wrap items-center gap-2 p-2.5 bg-slate-50 rounded-2xl border border-slate-200 mb-3">
+            <!-- JSで動的生成 -->
+          </div>
+          <h4 id="sim-result-headline" class="app-sim-head font-black text-slate-800">
+            見出し
+          </h4>
+          <p id="sim-result-detail" class="app-sim-detail text-slate-700 mt-2">
+            詳細テキスト
+          </p>
+        </div>
+
+        <!-- 豆知識・解説 -->
+        <div id="sim-tip-box" class="bg-amber-50 rounded-2xl p-4 border border-amber-200 app-card-desc text-amber-950">
+          <span class="font-extrabold">💡 ワンポイント解説：</span>
+          <span id="sim-tip-text">解説</span>
+        </div>
+
+        <!-- 次へボタン -->
+        <button id="btn-next-event" onclick="nextSimulationEvent()" class="app-btn w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-2xl transition flex items-center justify-center gap-2 shadow-md">
+          <span>次の展開へ</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- 画面4: 結果発表＆全アイテム結末図鑑 -->
+    <section id="screen-result" class="hidden flex-col gap-5 max-w-4xl mx-auto w-full">
+      
+      <!-- 結果サマリーカード -->
+      <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-pouch-600 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+          <div class="text-center md:text-left">
+            <span class="inline-block bg-white/20 backdrop-blur px-3.5 py-1 rounded-full text-xs font-bold mb-2">
+              シミュレーション結果
+            </span>
+            <h2 id="result-title" class="text-2xl md:text-3xl font-black tracking-tight">
+              裏技サバイバルマスター級！
+            </h2>
+            <p id="result-subtitle" class="text-xs md:text-sm text-white/90 mt-1 max-w-md">
+              あなたの選んだ持ち物によって、ユニークで知恵にあふれた被災生活が展開されました。
+            </p>
+          </div>
+
+          <!-- スコア＆ランクバッジ -->
+          <div class="flex items-center gap-4 bg-white/15 backdrop-blur p-4 rounded-3xl border border-white/20 shadow-inner">
+            <div class="text-center px-2">
+              <div class="text-xs font-bold text-white/80">SCORE</div>
+              <div id="result-score" class="text-3xl md:text-4xl font-black tracking-tighter">85<span class="text-sm font-normal">点</span></div>
+            </div>
+            <div class="h-10 w-px bg-white/30"></div>
+            <div class="text-center px-2">
+              <div class="text-xs font-bold text-white/80">RANK</div>
+              <div id="result-rank" class="text-3xl md:text-4xl font-black text-amber-200">A</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- メーター概要 (容量 & 重量) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-white/20 text-xs">
+          <div class="bg-black/10 rounded-2xl p-2.5">
+            <div class="text-white/70 font-medium">ポーチ容量使用率</div>
+            <div id="result-cap-stat" class="text-base font-extrabold mt-0.5">12 / 18 pt</div>
+          </div>
+          <div class="bg-black/10 rounded-2xl p-2.5">
+            <div class="text-white/70 font-medium">総重量</div>
+            <div id="result-weight-stat" class="text-base font-extrabold mt-0.5">380 g</div>
+          </div>
+          <div class="bg-black/10 rounded-2xl p-2.5 col-span-2 sm:col-span-1">
+            <div class="text-white/70 font-medium">トラブル＆裏技発動数</div>
+            <div id="result-solve-stat" class="text-base font-extrabold mt-0.5 text-amber-200">5件 発生</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- あなたの選んだ全アイテム結末図鑑 -->
+      <div class="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-book-bookmark text-orange-500"></i>
+            選んだ全アイテムの結末図鑑（どう役に立った/邪魔だった？）
+          </h3>
+          <span class="text-xs font-bold text-slate-400"><span id="result-item-total-count">0</span>品 判定</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-4">あなたがポーチに入れたすべてのアイテムが、被災時にどう機能したか（ネットの裏技や珍事件）の個別寸評です。</p>
+        
+        <div id="result-all-items-episodes" class="space-y-2.5">
+          <!-- JSで全アイテムの個別エピソードカードを挿入 -->
+        </div>
+      </div>
+
+      <!-- 被災トラブル判定の振り返り -->
+      <div class="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm">
+        <h3 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-check text-emerald-500"></i>
+          主要トラブルのシミュレーション振り返り
+        </h3>
+        <div id="result-events-list" class="space-y-2.5">
+          <!-- JSでトラブルごとの合否結果を挿入 -->
+        </div>
+      </div>
+
+      <!-- 防災士からの総合アドバイス -->
+      <div class="bg-emerald-50 rounded-3xl p-5 md:p-6 border border-emerald-200 text-slate-800">
+        <div class="flex items-center gap-3 mb-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-base shadow-sm">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-extrabold text-emerald-900">シミュレーション総評</h4>
+            <p class="text-xs text-emerald-700">0次防災（持ち歩きポーチ）のポイント</p>
+          </div>
+        </div>
+        <p id="result-advisor-text" class="text-xs md:text-sm text-slate-700 leading-relaxed">
+          防災ポーチに「絶対的な正解」はありません！命を守る基本アイテム（ライト・充電・トイレ・現金など）をベースにしつつ、自分や子どもが笑顔になれる「心の安心アイテム（お菓子やぬいぐるみ、推しグッズ）」を1〜2点忍ばせるのも実はとても素晴らしい防災です。
+        </p>
+      </div>
+
+      <!-- アクションボタン（再挑戦・シェア） -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 no-print">
+        <button onclick="restartGame()" class="w-full sm:w-1/2 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-2xl transition shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 text-sm">
+          <i class="fa-solid fa-rotate-left"></i> 別のアイテムで再実験する！
+        </button>
+        <button onclick="shareResult()" class="w-full sm:w-1/2 py-3.5 bg-slate-800 hover:bg-slate-900 text-white font-extrabold rounded-2xl transition flex items-center justify-center gap-2 text-sm">
+          <i class="fa-solid fa-share-nodes"></i> 結果をクリップボードにコピー
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- フッター -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-8 no-print">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>© 防災ポーチシミュレーター - 自由な持ち物で被災を生き抜く実験ゲーム</p>
+      <p class="text-xs text-slate-400">※本ゲームは防災知識の啓発と学習を目的としたシミュレーターです</p>
+    </div>
+  </footer>
+
+  <!-- モーダル: 0次防災ナレッジ -->
+  <div id="modal-knowledge" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-book-open"></i>
+          </span>
+          <h3 class="text-base md:text-lg font-extrabold text-slate-800">0次・1次・2次防災の違い</h3>
+        </div>
+        <button onclick="closeKnowledgeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs md:text-sm text-slate-600 leading-relaxed">
+        <p class="font-bold text-slate-800">
+          防災の備えは、発災からの時間と場所によって3つのステージに分かれます。
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 my-4">
+          <div class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3.5">
+            <div class="text-xs font-black text-orange-700 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-bag-shopping"></i> 0次防災（このゲーム）
+            </div>
+            <div class="text-xs font-bold text-slate-700 mb-1">【防災ポーチ】</div>
+            <p class="text-xs text-slate-600 leading-normal">
+              外出先で被災した時に、安全な場所まで自力でしのぐための「いつも持ち歩く」装備（300〜500g以内）。
+            </p>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3.5">
+            <div class="text-xs font-black text-blue-700 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-person-walking-luggage"></i> 1次防災
+            </div>
+            <div class="text-xs font-bold text-slate-700 mb-1">【非常持ち出し袋】</div>
+            <p class="text-xs text-slate-600 leading-normal">
+              自宅が倒壊・火災の危険がある時に、避難所へ逃げるリュック。1〜2日生き抜く必需品（約5〜8kg）。
+            </p>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+            <div class="text-xs font-black text-slate-700 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-boxes-stacked"></i> 2次防災
+            </div>
+            <div class="text-xs font-bold text-slate-700 mb-1">【自宅備蓄】</div>
+            <p class="text-xs text-slate-600 leading-normal">
+              ライフライン途絶時に自宅生活を維持するための備蓄。水・食料・簡易トイレ等最低3日〜1週間分。
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+          <h4 class="font-extrabold text-amber-900 text-xs mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i> 防災ポーチ成功の3原則
+          </h4>
+          <ul class="list-disc list-inside space-y-1 text-xs text-amber-800">
+            <li><strong>重くしない：</strong> 重いと毎日の持ち歩きが続かなくなります（目安500g以下）。</li>
+            <li><strong>多機能なものを選ぶ：</strong> 1つのアイテムで複数の役割を兼ねられるもの（アルミシート、ペットシーツなど）。</li>
+            <li><strong>自分仕様にカスタマイズ：</strong> 常備薬、コンタクト、推しグッズなど自分専用品を。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button onclick="closeKnowledgeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition">
+          閉じる
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-700 text-xs font-bold flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toast-msg">通知メッセージ</span>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT GAME LOGIC                      -->
+  <!-- ========================================== -->
+  <script>
+    const MAX_CAPACITY = 18;
+    const RECOMMENDED_WEIGHT_MAX = 500;
+
+    // 全82種類のアイテムマスターデータ
+    const ITEMS_DATA = [
+      // ----------------------------------------------------
+      // 【💡 ネット・SNS・動画で話題の裏技神アイテム】 (isHack: true)
+      // ----------------------------------------------------
+      {
+        id: 'pet_sheet',
+        name: 'ペットシーツ（吸水シート 1枚）',
+        category: 'hygiene',
+        isHack: true,
+        catLabel: '衛生・裏技',
+        icon: 'fa-solid fa-sheet-plastic',
+        size: 1,
+        weight: 25,
+        desc: '【SNSで大バズり】簡易トイレの凝固剤代わり、怪我の出血吸収、雨の泥拭きなど万能吸水神グッズ！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】ポリ袋にペットシーツを敷いて即席トイレ完成！驚異の吸水力で漏れ・臭いを完全封殺！'
+      },
+      {
+        id: 'blister_pads',
+        name: '靴擦れ専用ジェル保護パッド',
+        category: 'hygiene',
+        isHack: true,
+        catLabel: '衛生・裏技',
+        icon: 'fa-solid fa-shoe-prints',
+        size: 1,
+        weight: 10,
+        desc: '【動画で絶賛】革靴やパンプスでの長距離徒歩帰宅で足が血まみれになるのを防ぐ救世主！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】痛むかかとに貼った瞬間、痛みがゼロに！15kmの徒歩帰宅をスタスタ歩き切った！'
+      },
+      {
+        id: 'bottle_shower_cap',
+        name: 'ペットボトル用ジョーロキャップ',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-shower',
+        size: 1,
+        weight: 10,
+        desc: '【100均の裏技】ペットボトルに装着するだけで、わずかな水で何十回も手洗いや傷口洗浄ができる節水神具！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】少量の水をシャワー状にして無駄なく手洗い＆傷口洗浄！周りからも「それ欲しい！」と絶賛！'
+      },
+      {
+        id: 'usb_converter',
+        name: 'USB端子変換アダプタ（Type-C / Lightning）',
+        category: 'comm',
+        isHack: true,
+        catLabel: '連絡・裏技',
+        icon: 'fa-solid fa-plug',
+        size: 1,
+        weight: 5,
+        desc: '【ガジェット裏技】親指サイズ。他人に充電コードを借りる際「端子が合わない」絶望を完全回避！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】避難所で借りた充電ケーブルの端子が違ったが、変換アダプタで一発接続＆急速充電完了！'
+      },
+      {
+        id: 'eyebrow_pencil',
+        name: 'アイブロウペンシル（眉ペン）',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-pencil',
+        size: 1,
+        weight: 10,
+        desc: '【女性被災者の声】眉毛を描いて人前に出る安心感のほか、油性マジック代わりに皮膚や段ボールに文字も書ける！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】眉毛を描いて人前に出る精神的ストレスを解消！さらに段ボールに伝言メモもバッチリ書けた！'
+      },
+      {
+        id: 'dry_shampoo_sheet',
+        name: 'ドライシャンプーシート（水のいらない洗髪）',
+        category: 'hygiene',
+        isHack: true,
+        catLabel: '衛生・裏技',
+        icon: 'fa-solid fa-spray-can',
+        size: 1,
+        weight: 30,
+        desc: '【避難生活の神品】断水で何日も髪が洗えない時の猛烈な頭皮の痒み・ベタつき・ニオイを一掃！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】頭皮を拭いた瞬間、メントールの爽快感で生き返った！痒みと不快感が一瞬で吹き飛んだ！'
+      },
+      {
+        id: 'silicone_cup',
+        name: '折りたたみシリコンコップ',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-mug-saucer',
+        size: 1,
+        weight: 20,
+        desc: '【防災YouTuber推奨】厚さ1cmにペタンコになるコップ。給水所での水受けやうがい、服薬に超便利！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】給水車から清潔に水を受け取り、手を使わずに衛生的にうがいと薬の服用ができた！'
+      },
+      {
+        id: 'safety_pins',
+        name: '安全ピン（大・小 4本）',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-paperclip',
+        size: 1,
+        weight: 5,
+        desc: '【万能サバイバル具】破れたズボンの応急留め、バンダナを三角巾にする固定具、SIMスロット開けに。',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】避難中に破れたズボンの裾をパチッと留め、バンダナを腕吊り三角巾にして完璧固定！'
+      },
+      {
+        id: 'honey_stick',
+        name: '個包装スティックハチミツ（3本）',
+        category: 'food',
+        isHack: true,
+        catLabel: 'お菓子・裏技',
+        icon: 'fa-solid fa-jar',
+        size: 1,
+        weight: 30,
+        desc: '【医師も推奨】喉の殺菌、超速攻の血糖値回復、腐らないので賞味期限を気にせず携帯できる最強の甘味！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】煙と粉塵で痛めた喉にハチミツを流し込み、即座に喉の激痛を緩和＆エネルギーチャージ！'
+      },
+      {
+        id: 'throat_candy',
+        name: 'プロポリス配合のど飴（個包装 4個）',
+        category: 'food',
+        isHack: true,
+        catLabel: 'お菓子・裏技',
+        icon: 'fa-solid fa-capsules',
+        size: 1,
+        weight: 20,
+        desc: '【被災地体験談】避難所や乾燥した街中で真っ先にやられる「喉のイガイガ・咳」を徹底ブロック！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】埃っぽい避難所で喉がイガイガしたが、のど飴で唾液を分泌させて喉の炎症を防いだ！'
+      },
+      {
+        id: 'bos_bags',
+        name: '驚異の防臭袋（BOS 2枚）',
+        category: 'hygiene',
+        isHack: true,
+        catLabel: '衛生・裏技',
+        icon: 'fa-solid fa-wind',
+        size: 1,
+        weight: 10,
+        desc: '【ママ界・防災界の神袋】使用済み携帯トイレや生ゴミを入れて結ぶと臭いが完全に漏れない魔法の袋！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】使用後の携帯トイレを入れて密閉！密閉空間でも臭いが一切漏れず、周囲に気兼ねなく所持できた！'
+      },
+      {
+        id: 'alum_foil_folded',
+        name: '小さく折りたたんだアルミホイル',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-scroll',
+        size: 1,
+        weight: 15,
+        desc: '【サバイバル裏技】食器の上に敷いて水洗い不要の皿に、電波遮断、光の反射板にと変幻自在！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】配給の紙皿の上に敷いて使い、ホイルを捨てるだけで皿を何回も清潔に使い回せた！'
+      },
+      {
+        id: 'nail_clipper_mini',
+        name: '極小爪切り＆爪やすり',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-hand-scissors',
+        size: 1,
+        weight: 20,
+        desc: '【被災あるある】避難中の爪割れや深爪・ささくれは激痛で作業不能に。極小サイズでポーチに忍ばせるべし！',
+        episodeType: 'good',
+        episode: '【ネットの裏技発動】荷物運びで割れて引っかかる爪をサッと切断＆整え、出血と激痛を未然に防止！'
+      },
+      {
+        id: 'instant_miso_soup',
+        name: 'フリーズドライ味噌汁（スティック）',
+        category: 'food',
+        isHack: true,
+        catLabel: 'お菓子・裏技',
+        icon: 'fa-solid fa-bowl-rice',
+        size: 1,
+        weight: 15,
+        desc: '【精神安定の神】お湯さえあれば、冷え切った身体と心を極上のダシと塩分で一瞬で救う一杯。',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】配給のお湯で味噌汁を淹れた瞬間、身体中に温かいダシが染み渡り涙が出るほど安心した！'
+      },
+      {
+        id: 'straw_water_purifier',
+        name: 'ストロー型携帯浄水器（ソーヤー等）',
+        category: 'tool',
+        isHack: true,
+        catLabel: '道具・裏技',
+        icon: 'fa-solid fa-filter',
+        size: 2,
+        weight: 60,
+        desc: '【ガチサバイバル品】川の水や雨水の細菌・微生物を99.9%除去してその場で飲用可能にする浄水器！',
+        episodeType: 'great',
+        episode: '【ネットの裏技発動】水道が完全に止まる中、雨水をろ過して安全な飲料水を確保！まさにサバイバルマスター！'
+      },
+      {
+        id: 'thick_room_socks',
+        name: '厚手ルームソックス（くるくる巻き）',
+        category: 'warmth',
+        isHack: true,
+        catLabel: '防寒・裏技',
+        icon: 'fa-solid fa-socks',
+        size: 1,
+        weight: 40,
+        desc: '【避難所ライフハック】底冷えする体育館の床の冷気と汚れから足を守り、靴を脱いでリラックスできる。',
+        episodeType: 'good',
+        episode: '【ネットの裏技発動】氷のように冷たい避難所の床でも足元ぽかぽか！靴を脱いで足を休めることができた！'
+      },
+
+      // ----------------------------------------------------
+      // 【🧸 子ども・ホビー・心のケア】 (cat: fun)
+      // ----------------------------------------------------
+      {
+        id: 'plush_toy',
+        name: 'お気に入りのぬいぐるみ / マスコット',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-paw',
+        size: 3,
+        weight: 60,
+        desc: '不安で泣きそうな子どもをギュッと抱きしめて落ち着かせる魔法のアイテム。',
+        episodeType: 'good',
+        episode: 'パニックになりかけた子どもに渡すとピタッと泣き止み、不安な空間がパッと和んだ！メンタル回復に大貢献！'
+      },
+      {
+        id: 'handheld_game',
+        name: '携帯ゲーム機（Switch / ゲームボーイ等）',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-gamepad',
+        size: 3,
+        weight: 280,
+        desc: '退屈と不安に押しつぶされそうな待機時間を救う最強の暇つぶし。',
+        episodeType: 'good',
+        episode: '長時間の避難待機中、子どものぐずりを完全制圧！ただしバッテリーはあっという間に切れた！'
+      },
+      {
+        id: 'playing_cards',
+        name: 'トランプ / UNO',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-diamond',
+        size: 1,
+        weight: 70,
+        desc: '電池不要！誰とでも遊べて避難所や足止め場所の空気を明るくする。',
+        episodeType: 'great',
+        episode: '停電でスマホが使えない中、周りの見知らぬ人たちとババ抜き大会が開幕！一気に連帯感が生まれた！'
+      },
+      {
+        id: 'manga_book',
+        name: '大好きなマンガ本 / 推しの写真',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-book-open-reader',
+        size: 2,
+        weight: 160,
+        desc: '極限状態のメンタルを支える精神安定剤。読むだけで勇気が出る。',
+        episodeType: 'good',
+        episode: '真っ暗闇で不安な夜、推しの笑顔を見て「生き残るぞ」と強い勇気が湧いてきた！'
+      },
+      {
+        id: 'balloons',
+        name: 'ゴム風船（3個）',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-baseball',
+        size: 1,
+        weight: 10,
+        desc: '膨らませるだけで子どもが大喜び。水を入れて氷のう代わりにも。',
+        episodeType: 'good',
+        episode: '泣いていた周りの子どもたちに配って風船バレー開始！一瞬で笑顔が戻った！'
+      },
+      {
+        id: 'drawing_set',
+        name: 'ミニお絵かき帳＆色鉛筆',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-palette',
+        size: 1,
+        weight: 45,
+        desc: '音を出さずに静かに集中して遊べるため、避難待機で超優秀。',
+        episodeType: 'good',
+        episode: '避難所の片隅で子どもが静かにお絵かきに熱中。親もゆっくり情報収集できた！'
+      },
+      {
+        id: 'stickers',
+        name: 'キラキラごほうびシール',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-star',
+        size: 1,
+        weight: 5,
+        desc: '超軽量で子どもの機嫌を直す特効薬。持ち物の名前シールにも。',
+        episodeType: 'good',
+        episode: '「我慢できたね」と手の甲に貼ってあげると子どもが得意げに笑顔に！'
+      },
+      {
+        id: 'bubble_soap',
+        name: 'ミニシャボン玉セット',
+        category: 'fun',
+        catLabel: '子ども・ホビー',
+        icon: 'fa-solid fa-soap',
+        size: 1,
+        weight: 30,
+        desc: '屋外避難で子どもを笑顔にする。風向きの確認にも使える。',
+        episodeType: 'good',
+        episode: '公園での屋外待機中、シャボン玉を飛ばすと子どもたちが歓声をあげ、風向きも把握できた！'
+      },
+
+      // ----------------------------------------------------
+      // 【🍬 お菓子・飲食・補給】 (cat: food)
+      // ----------------------------------------------------
+      {
+        id: 'candy_choc',
+        name: '個包装チョコ・飴・塩分タブレット',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-candy-cane',
+        size: 1,
+        weight: 30,
+        desc: '低血糖防止と精神的ストレス緩和。溶けにくいものがおすすめ。',
+        episodeType: 'great',
+        episode: '長時間の待機でフラフラだったが、チョコ一粒で脳にエネルギーが復活！'
+      },
+      {
+        id: 'energy_yokan',
+        name: 'ミニ羊羹 / ブドウ糖タブレット',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-cookie-bite',
+        size: 1,
+        weight: 40,
+        desc: '水なしでも食べやすく、素早く脳と筋肉のエネルギーに。',
+        episodeType: 'great',
+        episode: '徒歩帰宅の途中、ミニ羊羹を食べて即座にスタミナ回復！防災界最強の携帯食！'
+      },
+      {
+        id: 'potato_chips',
+        name: 'ポテトチップス（袋菓子）',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-box-tissue',
+        size: 4,
+        weight: 60,
+        desc: 'かさばる！満員電車で踏まれたら粉々になるが、塩分と油分補給にはなる。',
+        episodeType: 'funny',
+        episode: '満員の避難所で圧迫されて袋が「パンッ！」と大破！粉々になったが皆で美味しくつまんだ。'
+      },
+      {
+        id: 'chupa_chups',
+        name: 'チュッパチャプス（棒付きキャンディ 3本）',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-lollipop',
+        size: 1,
+        weight: 35,
+        desc: '30分以上長持ちして口寂しさを紛らわせる。子どもにも大人気。',
+        episodeType: 'good',
+        episode: '空腹を紛らわせながら長時間歩行。棒付きなので喉に詰まらせる心配も少なく助かった！'
+      },
+      {
+        id: 'nuts_fruits',
+        name: 'ナッツ＆ドライフルーツ小袋',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-seedling',
+        size: 1,
+        weight: 35,
+        desc: '良質な脂質とミネラル補給。噛むことでリラックス効果も。',
+        episodeType: 'good',
+        episode: '腹持ちがよく、お腹の虫を鳴らさずに落ち着いて待機できた！'
+      },
+      {
+        id: 'energy_bar',
+        name: '栄養調整バー（カロリーメイト等 2本）',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-cubes',
+        size: 2,
+        weight: 50,
+        desc: '1箱で200kcal補給。歩行帰宅前のエネルギーチャージに。',
+        episodeType: 'good',
+        episode: '夕食が出ない避難所初日、手持ちのバーで最低限のカロリーを確保できた！'
+      },
+      {
+        id: 'spicy_snack',
+        name: '激辛カプサイシンスナック / 一味唐辛子',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-pepper-hot',
+        size: 1,
+        weight: 30,
+        desc: '体を温める…つもりが猛烈に喉が渇いて水が欲しくなる諸刃の剣。',
+        episodeType: 'bad',
+        episode: '食べたら口の中が火事になり、貴重な飲料水を一気飲みして後悔…！'
+      },
+      {
+        id: 'my_cutlery',
+        name: 'マイ箸・スプーン・フォークセット',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-utensils',
+        size: 1,
+        weight: 30,
+        desc: '配給でおにぎりや汁物が出た時、割り箸が不足していても即食べられる。',
+        episodeType: 'great',
+        episode: '配給の炊き出しで「箸が足りません！」となった中、マイ箸で即座に温かい汁物を堪能できた！'
+      },
+      {
+        id: 'water_500ml',
+        name: '500ml ペットボトル水（カバン内）',
+        category: 'food',
+        catLabel: 'お菓子・飲食',
+        icon: 'fa-solid fa-bottle-water',
+        size: 4,
+        weight: 520,
+        desc: '命をつなぐ飲料水。重いが外出時は常に持っておきたい。',
+        episodeType: 'great',
+        episode: '自販機がすべて停電停止する中、手持ちの水分で脱水症状を完全回避！'
+      },
+
+      // ----------------------------------------------------
+      // 【📞 連絡・通信・情報】 (cat: comm)
+      // ----------------------------------------------------
+      {
+        id: 'powerbank',
+        name: 'モバイルバッテリー＆短ケーブル',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-battery-half',
+        size: 3,
+        weight: 150,
+        desc: '連絡や災害情報取得の生命線。短いコードとセットで。',
+        episodeType: 'great',
+        episode: '家族との安否確認メッセージが繋がり、災害用伝言板にも無事登録できた！'
+      },
+      {
+        id: 'contact_card',
+        name: '家族・緊急連絡先カード',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-address-book',
+        size: 1,
+        weight: 5,
+        desc: 'スマホ電池切れ時や公衆電話を使う際に役立つ紙のメモ。',
+        episodeType: 'great',
+        episode: 'スマホの充電が切れたが、紙のメモを見て公衆電話から家族に無事を連絡できた！'
+      },
+      {
+        id: 'cash_coins',
+        name: '小銭・公衆電話用10円玉＆千円札',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-coins',
+        size: 1,
+        weight: 25,
+        desc: '停電で電子マネーやクレカが使えない時の決済、公衆電話用。',
+        episodeType: 'great',
+        episode: '停電で電子マネーが全滅する中、小銭でお釣りなし購入＆公衆電話を利用できた！'
+      },
+      {
+        id: 'id_copy',
+        name: '身分証・保険証・お薬手帳コピー',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-id-card',
+        size: 1,
+        weight: 5,
+        desc: '緊急受診時や身元確認、処方箋の確認に役立ちます。',
+        episodeType: 'good',
+        episode: '救護所で持病と薬の名前をスムーズに伝えられ、適切な処置を受けられた！'
+      },
+      {
+        id: 'pen_memo',
+        name: '油性マジック＆ミニメモ帳',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-pen',
+        size: 1,
+        weight: 25,
+        desc: '伝言の貼り紙や自分の状況メモに。油性なら雨でも消えません。',
+        episodeType: 'good',
+        episode: '避難場所の伝言板に「無事です」と貼り紙を残し、家族との合流に成功！'
+      },
+      {
+        id: 'pocket_radio',
+        name: '超小型ポケットラジオ（イヤホン付き）',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-radio',
+        size: 2,
+        weight: 75,
+        desc: '通信障害・ネット不通時でも正確な一次情報をキャッチ。',
+        episodeType: 'great',
+        episode: 'ネット回線がパンクする中、ラジオから鉄道の運転再開見込みをいち早く入手！'
+      },
+      {
+        id: 'old_smartphone',
+        name: '解約済みの古いスマホ（サブ機）',
+        category: 'comm',
+        catLabel: '連絡・情報',
+        icon: 'fa-solid fa-mobile-screen',
+        size: 2,
+        weight: 150,
+        desc: 'メインスマホの温存に。オフライン地図、ライト、緊急通報(110/119)に使える。',
+        episodeType: 'great',
+        episode: 'オフライン保存していた地図アプリをサブ機で閲覧し、メインスマホのバッテリーを完全温存！'
+      },
+
+      // ----------------------------------------------------
+      // 【🛡️ 安全・ライト・防犯】 (cat: safe)
+      // ----------------------------------------------------
+      {
+        id: 'mini_light',
+        name: '小型LED懐中電灯',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-lightbulb',
+        size: 1,
+        weight: 30,
+        desc: '停電時の暗闇、地下街、夜間の徒歩帰宅を安全に照らす。',
+        episodeType: 'great',
+        episode: '真っ暗な地下街の階段を安全に照らし、転倒することなく地上へ脱出！'
+      },
+      {
+        id: 'whistle',
+        name: '防災ホイッスル（高周波笛）',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-bullhorn',
+        size: 1,
+        weight: 15,
+        desc: 'エレベーターや建物内に閉じ込められた時、体力を消耗せず位置を知らせる。',
+        episodeType: 'great',
+        episode: '閉じ込められたエレベーター内で笛を吹き、外部の救助隊に一瞬で発見された！'
+      },
+      {
+        id: 'penlight_otaku',
+        name: 'オタク用ペンライト / サイリウム',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-wand-sparkles',
+        size: 2,
+        weight: 80,
+        desc: '爆光で部屋全体を照らせる！推し色に光らせれば目印・誘導灯にも。',
+        episodeType: 'great',
+        episode: '停電の地下街でペンライトを最大光量点灯！周囲を誘導する頼もしい光のリーダーに！'
+      },
+      {
+        id: 'piropiro_whistle',
+        name: 'パーティー用ピロピロ笛（吹き戻し）',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-wind',
+        size: 1,
+        weight: 10,
+        desc: '吹くとピロピロ伸びる笛。ホイッスルの代用になるか…？',
+        episodeType: 'funny',
+        episode: '瓦礫の隙間からピロピロ〜と鳴らしたら救助隊に「何それw」と笑われつつ無事救出！'
+      },
+      {
+        id: 'reflector',
+        name: '反射材キーホルダー / リフレクター',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-certificate',
+        size: 1,
+        weight: 10,
+        desc: '街灯が消えた夜道で、車のライトを反射して事故を防ぐ。',
+        episodeType: 'good',
+        episode: '街灯が消えた真っ暗な夜道で、車の運転手にいち早く気づいてもらえ事故を回避！'
+      },
+      {
+        id: 'gloves_thin',
+        name: '防刃・すべり止め薄手手袋',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-mitten',
+        size: 1,
+        weight: 35,
+        desc: '割れたガラスや散乱した瓦礫から手を守る。',
+        episodeType: 'good',
+        episode: '倒れた障害物をどかしながら移動。手を一切切らずに安全を確保！'
+      },
+      {
+        id: 'security_buzzer',
+        name: '携帯用防犯ブザー',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-bell',
+        size: 1,
+        weight: 30,
+        desc: '混乱時の防犯や、自分の居場所を周囲に急報する。',
+        episodeType: 'good',
+        episode: 'ピンを抜いて大音量で周囲に危険を周知し、混乱に乗じたトラブルを未然に防いだ！'
+      },
+      {
+        id: 'mini_scissors',
+        name: '携帯用折りたたみミニハサミ',
+        category: 'safe',
+        catLabel: '安全・ライト',
+        icon: 'fa-solid fa-scissors',
+        size: 1,
+        weight: 20,
+        desc: '包帯・アルミシートの切断やパッケージ開封に。',
+        episodeType: 'good',
+        episode: '硬くて開かない非常食のパッケージやアルミシートをスパッと切断！'
+      },
+
+      // ----------------------------------------------------
+      // 【🩹 衛生・医療・ケア】 (cat: hygiene)
+      // ----------------------------------------------------
+      {
+        id: 'portable_toilet',
+        name: '携帯ミニトイレ（1〜2回分）',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-restroom',
+        size: 2,
+        weight: 45,
+        desc: '電車内や駅の足止め、断水でトイレが使えない時に必須。',
+        episodeType: 'great',
+        episode: '断水で閉鎖された駅で我慢の限界を清潔に回避！尊厳と健康を守った！'
+      },
+      {
+        id: 'first_aid',
+        name: '絆創膏＆キズパワーパッド',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-bandage',
+        size: 1,
+        weight: 10,
+        desc: '靴擦れや破片による切り傷を素早く保護。',
+        episodeType: 'great',
+        episode: '割れたガラスで切った指先をすぐ保護し、感染を防いで歩き続けられた！'
+      },
+      {
+        id: 'medicine',
+        name: '常備薬（頭痛・胃腸・下痢止め・持病）',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-pills',
+        size: 1,
+        weight: 15,
+        desc: '被災時の強いストレスによる頭痛・胃痛・持病への即時対応。',
+        episodeType: 'great',
+        episode: '突然の激しいストレス頭痛を鎮痛薬で抑え、冷静な判断力をキープできた！'
+      },
+      {
+        id: 'wet_wipes',
+        name: '除菌ウェットティッシュ',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-hands-bubbles',
+        size: 1,
+        weight: 35,
+        desc: '水が出ない状況で手や顔を拭き、感染症や衛生悪化を防ぐ。',
+        episodeType: 'great',
+        episode: '断水で手洗いできない中、食事前に手をしっかり除菌して食中毒を予防！'
+      },
+      {
+        id: 'pocket_tissue',
+        name: 'ポケットティッシュ',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-toilet-paper',
+        size: 1,
+        weight: 15,
+        desc: '紙がないトイレ、止血、汚れ拭きなど多用途。',
+        episodeType: 'good',
+        episode: 'トイレットペーパーがない仮設トイレで大助かり！'
+      },
+      {
+        id: 'mask',
+        name: '個包装不織布マスク（2枚）',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-mask-face',
+        size: 1,
+        weight: 10,
+        desc: '倒壊建物の粉塵・煙の吸入防止、感染症対策、防寒。',
+        episodeType: 'great',
+        episode: '街中に舞い上がる白い粉塵をシャットアウトし、気管と喉を守り切った！'
+      },
+      {
+        id: 'antiseptic_spray',
+        name: '携帯用ミニ消毒液スプレー',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-spray-can-sparkles',
+        size: 1,
+        weight: 30,
+        desc: '断水時の手指消毒や傷口周辺の清潔維持に。',
+        episodeType: 'good',
+        episode: '泥汚れのついた手指をスプレー消毒して衛生環境をキープ！'
+      },
+      {
+        id: 'eyedrops_lip',
+        name: '目薬＆リップクリーム',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-eye-dropper',
+        size: 1,
+        weight: 25,
+        desc: '煙や砂埃で痛めた目の洗浄、唇の乾燥・ひび割れ防止。',
+        episodeType: 'good',
+        episode: '埃が入って痛む目を洗い流し、クリアな視界を取り戻した！'
+      },
+      {
+        id: 'sanitary_pad',
+        name: '生理用ナプキン / 衛生用品',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-shield-heart',
+        size: 1,
+        weight: 20,
+        desc: '突然の生理への対応のほか、清潔な止血パッドとしても代用可能。',
+        episodeType: 'great',
+        episode: '突然の体調変化にも慌てず対応できた上、友人の出血時の圧迫止血パッドとしても代用！'
+      },
+      {
+        id: 'dental_floss',
+        name: 'デンタルフロス（超強靭な糸）',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-tooth',
+        size: 1,
+        weight: 15,
+        desc: '歯のケアはもちろん、千切れない結束糸・靴紐の補修糸として万能。',
+        episodeType: 'great',
+        episode: '避難中にちぎれたカバンの持ち手と靴紐をフロスでガチガチに結束補修！超頑丈！'
+      },
+      {
+        id: 'aroma_spray',
+        name: 'アロマスプレー / お気に入りの香水',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-spa',
+        size: 1,
+        weight: 25,
+        desc: '避難所の悪臭対策や、マスクに吹きかけて気分をリフレッシュ。',
+        episodeType: 'good',
+        episode: 'マスクの内側にワンプッシュすると良い香りが広がり、息苦しさとストレスが消えた！'
+      },
+      {
+        id: 'toilet_paper_roll',
+        name: '丸ごとトイレットペーパー1ロール（芯抜き）',
+        category: 'hygiene',
+        catLabel: '衛生・ケア',
+        icon: 'fa-solid fa-scroll',
+        size: 3,
+        weight: 100,
+        desc: 'つぶして平らにすれば入る！圧倒的な安心感と汎用性。',
+        episodeType: 'great',
+        episode: 'トイレはもちろん、食器拭きや鼻水まで何でも使えて周囲からも大感謝された！'
+      },
+
+      // ----------------------------------------------------
+      // 【🧥 防寒・雨具・衣類保護】 (cat: warmth)
+      // ----------------------------------------------------
+      {
+        id: 'alumi_blanket',
+        name: '非常用アルミブランケット',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-rug',
+        size: 2,
+        weight: 50,
+        desc: '薄手軽量なのに体温を反射して強烈に保温。雨・風よけにも。',
+        episodeType: 'great',
+        episode: '急激に冷え込む夜間の待機中、羽織るだけでポカポカ！低体温症を完全防止！'
+      },
+      {
+        id: 'poncho',
+        name: '携帯薄手レインポンチョ',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-cloud-showers-heavy',
+        size: 2,
+        weight: 60,
+        desc: '両手を空けたまま雨風を防ぎ、防寒着にもなる。',
+        episodeType: 'great',
+        episode: '突然の土砂降りの中、両手を空けて安全に歩行避難できた！'
+      },
+      {
+        id: 'hand_warmer',
+        name: '使い捨てカイロ（1個）',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-fire',
+        size: 1,
+        weight: 40,
+        desc: '手先のかじかみ防止、お腹や背中を温めて体調維持。',
+        episodeType: 'good',
+        episode: '寒さでかじかんだ指先を温め、スマホの操作や細かい作業がスムーズに行えた！'
+      },
+      {
+        id: 'bubble_wrap',
+        name: 'プチプチ（気泡緩衝材 1シート）',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-grip',
+        size: 2,
+        weight: 20,
+        desc: '冷たい床に敷けば断熱座布団に！潰してストレス解消にも。',
+        episodeType: 'great',
+        episode: '避難所の冷たいコンクリート床に敷いたら劇的にお尻が暖かい！潰して子どもと遊んで大好評！'
+      },
+      {
+        id: 'folding_fan',
+        name: '扇子 / うちわ',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-fan',
+        size: 1,
+        weight: 25,
+        desc: '停電時の熱中症予防、煙よけ、着替え時の目隠しに。',
+        episodeType: 'good',
+        episode: 'エアコンが止まり蒸し風呂状態の室内で、あおいで涼をとり熱中症を回避！'
+      },
+      {
+        id: 'sunglasses',
+        name: 'サングラス',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-glasses',
+        size: 1,
+        weight: 25,
+        desc: '飛散する粉塵や強い日差しから目を守る。',
+        episodeType: 'good',
+        episode: '強風で舞い上がる砂埃から目をガードし、目を細めずに安全歩行！'
+      },
+      {
+        id: 'compressed_towel',
+        name: '圧縮タブレットタオル',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-scroll',
+        size: 1,
+        weight: 15,
+        desc: '少量の水で手のひらサイズのタオルに。',
+        episodeType: 'good',
+        episode: '水で戻して顔と首の泥汚れをスッキリ拭き取れた！'
+      },
+      {
+        id: 'bandana',
+        name: '大判バンダナ / 手ぬぐい',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-vest',
+        size: 1,
+        weight: 25,
+        desc: '三角巾（骨折固定）、防塵マスク、防寒スカーフと万能。',
+        episodeType: 'great',
+        episode: '腕を痛めた人の三角巾として固定し、応急手当てを完了！'
+      },
+      {
+        id: 'earplugs_eyemask',
+        name: '耳栓＆アイマスクセット',
+        category: 'warmth',
+        catLabel: '防寒・雨具',
+        icon: 'fa-solid fa-headphones',
+        size: 1,
+        weight: 20,
+        desc: '明るく騒がしい避難所や待機場所での休息確保に。',
+        episodeType: 'good',
+        episode: '周囲の雑音と照明を遮断して熟睡でき、翌朝の体力を全回復！'
+      },
+
+      // ----------------------------------------------------
+      // 【🔧 日用品・道具】 (cat: tool)
+      // ----------------------------------------------------
+      {
+        id: 'ziploc_bags',
+        name: 'ジッパー付き保存袋（ジップロック 2枚）',
+        category: 'tool',
+        catLabel: '日用品・道具',
+        icon: 'fa-solid fa-folder-open',
+        size: 1,
+        weight: 15,
+        desc: 'スマホの防水ケース、濡れた衣類入れ、氷のうなど万能。',
+        episodeType: 'great',
+        episode: '大雨の中でスマホを袋に入れて操作！完全防水で故障を防いだ！'
+      },
+      {
+        id: 'trash_bags',
+        name: '黒ポリ袋 / 防臭袋（2枚）',
+        category: 'tool',
+        catLabel: '日用品・道具',
+        icon: 'fa-solid fa-bag-shopping',
+        size: 1,
+        weight: 20,
+        desc: 'ゴミ入れ、簡易目隠しポンチョ、携帯トイレの追加処理に。',
+        episodeType: 'great',
+        episode: '穴を開けて被り即席ポンチョ化＆トイレの汚物処理袋として大活躍！'
+      },
+      {
+        id: 'curing_tape',
+        name: '小型養生テープ（巻き直し）',
+        category: 'tool',
+        catLabel: '日用品・道具',
+        icon: 'fa-solid fa-tape',
+        size: 1,
+        weight: 25,
+        desc: '手で切れて跡が残らない。メモの貼り付けや破れ補修に。',
+        episodeType: 'great',
+        episode: '段ボールにメモを貼ったり、破れた靴底をグルグル巻きにして補修完了！'
+      },
+      {
+        id: 'strong_magnet',
+        name: '超強力ネオジム磁石（2個）',
+        category: 'tool',
+        catLabel: '日用品・道具',
+        icon: 'fa-solid fa-magnet',
+        size: 1,
+        weight: 20,
+        desc: '鉄骨やロッカーにライトやメモを固定できる。',
+        episodeType: 'good',
+        episode: '金属の壁にライトを固定して両手をフリーにして作業できた！'
+      },
+      {
+        id: 'mini_mirror',
+        name: 'ミニ手鏡 / コンパクトミラー',
+        category: 'tool',
+        catLabel: '日用品・道具',
+        icon: 'fa-solid fa-compact-disc',
+        size: 1,
+        weight: 20,
+        desc: '目に入ったゴミの確認や、太陽光を反射して救助信号に。',
+        episodeType: 'good',
+        episode: '目に入ったまつ毛とホコリを鏡で見てサッと除去できた！'
+      },
+
+      // ----------------------------------------------------
+      // 【💣 ネタ・NG品・重量級】 (cat: ng)
+      // ----------------------------------------------------
+      {
+        id: 'dumbbell_2kg',
+        name: '筋トレ用ダンベル（2kg）',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-dumbbell',
+        size: 8,
+        weight: 2000,
+        desc: 'なぜ入れた！？歩くたびに肩に激痛が走り、体力を激しく奪う。',
+        episodeType: 'bad',
+        episode: '重すぎて肩が砕けそうになり、歩行開始15分で道端に置き去りにした…'
+      },
+      {
+        id: 'cash_1m',
+        name: '100万円の札束（帯封付き）',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-money-bill-wave',
+        size: 2,
+        weight: 105,
+        desc: '大金だが停電時の商店では「お釣りがないから使えません」と断られる。',
+        episodeType: 'funny',
+        episode: '自販機にも使えず、コンビニでも「お釣りがないです」と断られ、小銭を持つ人が羨ましくなった…'
+      },
+      {
+        id: 'skillet_iron',
+        name: '鉄フライパン（スキレット）',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-kitchen-set',
+        size: 6,
+        weight: 1200,
+        desc: '美味しく肉が焼けるが重すぎるし、外で火が使えない！',
+        episodeType: 'bad',
+        episode: 'ただのカバンを重くする鉄の塊と化し、避難所で鈍器として警戒された…'
+      },
+      {
+        id: 'roller_skates',
+        name: 'ローラースケート / ミニスケボー',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-person-skating',
+        size: 6,
+        weight: 1100,
+        desc: '移動を快適にするつもりが、道路の瓦礫やガラス破片で一歩も滑れない。',
+        episodeType: 'bad',
+        episode: '散乱した破片と段差だらけの道路で全く走れず、単なるクソ重いお荷物に…'
+      },
+      {
+        id: 'ng_bottle_2l',
+        name: '2L ペットボトル水',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-bottle-water',
+        size: 8,
+        weight: 2000,
+        desc: '重すぎてポーチが破れる！自宅備蓄や非常用リュック用。',
+        episodeType: 'bad',
+        episode: 'ポーチのチャックが破裂！重すぎて走って逃げられなくなった！'
+      },
+      {
+        id: 'ng_canned_food',
+        name: '缶詰 3缶セット',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-cubes-stacked',
+        size: 5,
+        weight: 500,
+        desc: '重くかさばり、缶切りがないと開かない！',
+        episodeType: 'bad',
+        episode: 'お腹が空いたが開ける道具がなく、ただ重い缶を眺めて終わった…'
+      },
+      {
+        id: 'ng_stove',
+        name: '卓上カセットコンロ',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-fire-burner',
+        size: 12,
+        weight: 1500,
+        desc: 'ポーチに入るわけがない！自宅の2次防災用。',
+        episodeType: 'bad',
+        episode: 'カバンがパンパンになり他の必需品が一切入らなかった…！'
+      },
+      {
+        id: 'ng_blanket_heavy',
+        name: '厚手毛布・羽毛寝袋',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-bed',
+        size: 10,
+        weight: 1200,
+        desc: 'かさばりすぎて持ち歩けません。アルミブランケットを選びましょう。',
+        episodeType: 'bad',
+        episode: '巨大すぎてカバンを占領し、雨を吸って激重になってしまった…'
+      },
+      {
+        id: 'ng_helmet',
+        name: '防災用ハードヘルメット',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-helmet-safety',
+        size: 8,
+        weight: 400,
+        desc: 'カバンに入りません！自宅やオフィスの非常持ち出し用。',
+        episodeType: 'bad',
+        episode: 'カバンに入らず手持ちになり、片手が塞がって移動に支障が出た！'
+      },
+      {
+        id: 'ng_generator',
+        name: 'ポータブル小型発電機',
+        category: 'ng',
+        catLabel: 'ネタ・NG品',
+        icon: 'fa-solid fa-bolt',
+        size: 20,
+        weight: 10000,
+        desc: '10kg以上！ポーチに入れるのは不可能です。',
+        episodeType: 'bad',
+        episode: '持ち上げることすら辛く、発災直後にギブアップ…'
+      }
+    ];
+
+    // 基本トラブルイベント
+    const STORY_STAGES = [
+      {
+        id: 'stage_1_escape',
+        stageNum: 1,
+        stageName: '第1章: 地下街で被災・脱出',
+        title: '【第1章】外出先で被災！大規模停電の地下街から脱出せよ',
+        desc: '外出中の地下街で震度6強の激震が発生！照明が一瞬で全滅し、真っ暗闇の中で割れたガラスが散乱。周囲がパニックになる中、安全に地上出口を目指さなければなりません！',
+        targetIds: ['mini_light', 'penlight_otaku', 'old_smartphone'],
+        fallbackIds: ['whistle', 'piropiro_whistle', 'reflector', 'safety_pins'],
+        successHead: 'ライトやペンライトで足元を照らし、安全に地上へ脱出！',
+        successDesc: '周囲の人にも声をかけながら足元の危険を避け、無事に地上出口へ脱出できました！',
+        fallbackHead: '笛や反射材で存在を知らせつつ、慎重に脱出！',
+        fallbackDesc: 'ライトはありませんでしたが、音を鳴らして周囲と声を掛け合って地上へ脱出しました！',
+        failHead: '足元が見えず転倒の危険＆真っ暗で動けない…！',
+        failDesc: '周囲もパニック状態で視界が効かず、ガラス片や段差の危険に直面してしまいました。',
+        tip: 'スマホのライトは電池を消耗するため、単体LEDライトやペンライトが重宝します。'
+      },
+      {
+        id: 'stage_2_contact',
+        stageNum: 2,
+        stageName: '第2章: 地上脱出・交通麻痺と安否確認',
+        title: '【第2章】地上脱出！電車全線ストップ＆スマホバッテリー危機',
+        desc: 'なんとか地上へ出たものの駅前は大混乱！電車もバスも運行停止。家族の安否を確認したいですが、回線はパンクし、スマホのバッテリー残量は10%を切ってしまいました…！',
+        targetIds: ['powerbank', 'usb_converter', 'old_smartphone'],
+        fallbackIds: ['contact_card', 'cash_coins', 'eyebrow_pencil', 'pocket_radio'],
+        successHead: 'バッテリーや変換アダプタで充電＆安否連絡完了！',
+        successDesc: '家族とメッセージが繋がり、災害用伝言ダイヤル(171)への安否登録もスムーズに完了しました！',
+        fallbackHead: '紙の連絡先と小銭で、公衆電話から無事連絡！',
+        fallbackDesc: 'スマホは切れましたが、紙のメモを見て公衆電話（停電時も通話可）から家族に連絡できました！',
+        failHead: 'スマホの電源が落ち、誰とも連絡が取れなくなってしまった…！',
+        failDesc: '家族の電話番号が頭に入っておらず、公衆電話に並んでも番号が思い出せませんでした。',
+        tip: '家族の電話番号を書いた紙と公衆電話用の小銭は、ポーチに入れておくべき最軽量の必需品です。'
+      },
+      {
+        id: 'stage_3_stay',
+        stageNum: 3,
+        stageName: '第3章: 一時待機場所・トイレ断水と怪我の手当て',
+        title: '【第3章】一時待機場所で足止め！トイレ全面断水＆粉塵と怪我',
+        desc: '交通機関の再開を待つため一時避難スペースで待機。しかし水道が止まりトイレは閉鎖！さらに移動中に手を切った傷が痛み、舞い上がった粉塵で喉のイガイガが止まりません…！',
+        targetIds: ['portable_toilet', 'pet_sheet', 'first_aid', 'mask', 'bottle_shower_cap'],
+        fallbackIds: ['bos_bags', 'trash_bags', 'pocket_tissue', 'wet_wipes', 'toilet_paper_roll', 'bandana', 'antiseptic_spray', 'blister_pads', 'honey_stick', 'throat_candy'],
+        successHead: '携帯トイレ・ペットシーツ・救急セットで完璧に対処！',
+        successDesc: '衛生的にトイレのピンチをしのぎ、手当てとマスクで喉と傷口を保護して体力を温存できました！',
+        fallbackHead: '手持ちの工夫グッズや日用品を応用して応急処置！',
+        fallbackDesc: '防臭袋やティッシュ、のど飴や除菌シートを組み合わせてなんとか急場をしのぎました！',
+        failHead: 'トイレが使えず激しい腹痛＆喉と傷口が悪化…！',
+        failDesc: '何時間もトイレを我慢してストレスと体力を激しく消耗し、衛生面でも不安が募りました。',
+        tip: 'ペットシーツはポリ袋と合わせると即席トイレになり、傷口の吸水にも使える万能裏技神具です。'
+      },
+      {
+        id: 'stage_4_walk',
+        stageNum: 4,
+        stageName: '第4章: 徒歩帰宅の決断・夜間の寒冷と足の激痛',
+        title: '【第4章】徒歩帰宅を決断！夜のビル風と長距離歩行の試練',
+        desc: '電車の復旧見込みが立たないため、数キロ先の避難所（または自宅）まで歩いて向かうことを決断！しかし日が暮れて急激に冷え込み、普段履きの靴でかかとに激しい靴擦れが発生…！',
+        targetIds: ['alumi_blanket', 'blister_pads', 'thick_room_socks'],
+        fallbackIds: ['poncho', 'hand_warmer', 'bubble_wrap', 'bandana', 'safety_pins', 'candy_choc', 'energy_yokan', 'instant_miso_soup'],
+        successHead: 'アルミブランケットと靴擦れパッドで過酷な夜道を突破！',
+        successDesc: '痛む足裏を保護して歩行を維持し、冷たいビル風をアルミシートで遮断して体温を守り抜きました！',
+        fallbackHead: 'カイロやポンチョ、おやつで体温とエネルギーを維持！',
+        fallbackDesc: '持っていた防寒具やお菓子で励まされながら、一歩一歩着実に歩みを進めました！',
+        failHead: '身体が底冷えして手足がかじかみ、足の激痛で動けない…！',
+        failDesc: '靴擦れの激痛で歩行困難になり、寒さで震えが止まらず途中で立ち往生してしまいました。',
+        tip: 'アルミブランケットは手のひらサイズで毛布並みの保温力。靴擦れパッドも徒歩帰宅の命綱です。'
+      },
+      {
+        id: 'stage_5_arrival',
+        stageNum: 5,
+        stageName: '第5章: 避難所（自宅）到着！夜を乗り切るケア',
+        title: '【第5章】避難所（自宅）に無事到着！被災初日の夜を越す',
+        desc: '何時間も歩き続け、ついに避難所（自宅）へ無事到着！しかし避難所の体育館は底冷えし、お風呂や洗顔もできません。疲労困憊の中、今夜を安全かつ衛生的に乗り切れるでしょうか…？',
+        targetIds: ['thick_room_socks', 'dry_shampoo_sheet', 'instant_miso_soup', 'alumi_blanket', 'stuffed_toy'],
+        fallbackIds: ['hand_warmer', 'wet_wipes', 'eye_mask', 'earplugs', 'candy_choc', 'potato_chips', 'chupa_chups', 'bandana', 'trash_bags', 'folding_silicone_cup', 'aroma_spray', 'dental_floss'],
+        successHead: '冷え・衛生・心のケアが万全！快適に夜を越す準備完了！',
+        successDesc: '足元の冷えを防ぎ、ドライシャンプーや温かいものでリフレッシュ！心にゆとりを持って朝を迎えられます。',
+        fallbackHead: '除菌シートやおやつでリフレッシュして一息！',
+        fallbackDesc: '身体を拭き、甘いものを口にして緊張がほぐれました。明日への活力を蓄えられます。',
+        failHead: '床からの底冷えと身体のベタつき・不安で眠れない…！',
+        failDesc: '慣れない避難所の環境と寒さで心身ともに消耗し、過酷な夜を過ごすことになりました。',
+        tip: '避難所の床の冷え対策（厚手靴下など）や、頭皮の不快感を消すドライシャンプーは被災者の間で大絶賛されています。'
+      }
+    ];
+
+    let gameState = {
+      selectedItems: [],
+      simQueue: [],
+      simStep: 0,
+      simHp: 100,
+      simResults: [],
+      soundEnabled: true
+    };
+
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+      if (!gameState.soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'select') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'remove') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(659.25, now);
+          osc.frequency.exponentialRampToValueAtTime(329.63, now + 0.08);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'warning') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.setValueAtTime(140, now + 0.1);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'success') {
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, now + idx * 0.05);
+            g.gain.setValueAtTime(0.1, now + idx * 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.2);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(now + idx * 0.05);
+            o.stop(now + idx * 0.05 + 0.2);
+          });
+        } else if (type === 'fail') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.linearRampToValueAtTime(150, now + 0.3);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+      } catch (e) {
+        console.warn('Audio error:', e);
+      }
+    }
+
+    function toggleSound() {
+      gameState.soundEnabled = !gameState.soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      if (gameState.soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-slate-700';
+        showToast('サウンドをONにしました', 'info');
+        playSound('select');
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+        showToast('サウンドをOFFにしました', 'info');
+      }
+    }
+
+    function showScreen(screenId) {
+      ['screen-intro', 'screen-packing', 'screen-sim', 'screen-result'].forEach(id => {
+        const el = document.getElementById(id);
+        if (id === screenId) {
+          el.classList.remove('hidden');
+          el.classList.add('flex');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startPackingScreen() {
+      initAudio();
+      playSound('select');
+      gameState.selectedItems = [];
+      gameState.simResults = [];
+      gameState.simStep = 0;
+      gameState.simHp = 100;
+
+      document.getElementById('count-all').textContent = ITEMS_DATA.length;
+      renderItemGrid();
+      updatePouchUI();
+      showScreen('screen-packing');
+    }
+
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-tab').forEach(tab => {
+        if (tab.getAttribute('data-cat') === cat) {
+          tab.className = 'cat-tab app-tab active px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-slate-800 text-white transition';
+        } else {
+          if (tab.getAttribute('data-cat') === 'hack') {
+            tab.className = 'cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 transition';
+          } else {
+            tab.className = 'cat-tab app-tab px-3 py-1.5 rounded-xl font-extrabold whitespace-nowrap bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition';
+          }
+        }
+      });
+      renderItemGrid();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.trim().toLowerCase();
+      const clearBtn = document.getElementById('btn-clear-search');
+      if (searchQuery) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+      renderItemGrid();
+    }
+
+    function clearSearch() {
+      document.getElementById('item-search-input').value = '';
+      searchQuery = '';
+      document.getElementById('btn-clear-search').classList.add('hidden');
+      renderItemGrid();
+    }
+
+    function renderItemGrid() {
+      const container = document.getElementById('items-grid');
+      container.innerHTML = '';
+
+      const filtered = ITEMS_DATA.filter(item => {
+        let matchesCat = false;
+        if (currentCategory === 'all') matchesCat = true;
+        else if (currentCategory === 'hack') matchesCat = !!item.isHack;
+        else matchesCat = (item.category === currentCategory);
+
+        const matchesSearch = !searchQuery || 
+          item.name.toLowerCase().includes(searchQuery) || 
+          item.desc.toLowerCase().includes(searchQuery) ||
+          item.catLabel.toLowerCase().includes(searchQuery);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-magnifying-glass text-2xl mb-2 text-slate-300"></i>
+            <p>該当するアイテムが見つかりませんでした</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isSelected = gameState.selectedItems.some(i => i.id === item.id);
+        const card = document.createElement('div');
+        
+        let borderClass = isSelected ? 'border-orange-500 bg-orange-50/60 shadow-sm ring-2 ring-orange-400/30' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs';
+        if (item.category === 'ng') {
+          borderClass = isSelected ? 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-400/30' : 'border-rose-200 bg-rose-50/20 hover:border-rose-300';
+        } else if (item.isHack) {
+          borderClass = isSelected ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-400/30' : 'border-amber-200 bg-amber-50/20 hover:border-amber-300';
+        } else if (item.category === 'fun') {
+          borderClass = isSelected ? 'border-purple-500 bg-purple-50/70 ring-2 ring-purple-400/30' : 'border-purple-200 bg-purple-50/20 hover:border-purple-300';
+        }
+
+        card.className = `p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between select-none ${borderClass}`;
+        card.onclick = () => toggleItem(item.id);
+
+        card.innerHTML = `
+          <div>
+            <!-- 1段目: カテゴリバッジ & 選択状態 (横幅を圧迫しない) -->
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                ${item.isHack ? '<span class="app-badge font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md whitespace-nowrap">💡裏技</span>' : ''}
+                <span class="app-badge font-bold ${item.category === 'ng' ? 'text-rose-600' : (item.category === 'fun' ? 'text-purple-600' : 'text-slate-500')} whitespace-nowrap">${item.catLabel}</span>
+              </div>
+              <span class="app-badge px-2.5 py-0.5 rounded-full whitespace-nowrap font-black shrink-0 ${isSelected ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}">
+                ${isSelected ? '✓ 選択中' : '＋ 入れる'}
+              </span>
+            </div>
+
+            <!-- 2段目: アイテム名 (カード横幅100%を使って表示！絶対に縦潰れしない) -->
+            <h4 class="app-card-title font-extrabold text-slate-800 mb-1.5">
+              <i class="${item.icon} ${isSelected ? 'text-orange-500' : 'text-slate-500'} mr-1"></i>${item.name}
+            </h4>
+
+            <!-- 3段目: 説明文 (カード横幅100%) -->
+            <p class="app-card-desc text-slate-600 mb-3">${item.desc}</p>
+          </div>
+
+          <!-- 4段目: サイズ・重量 (改行禁止でスッキリ) -->
+          <div class="flex items-center gap-4 pt-2 border-t border-slate-100 app-card-meta font-bold text-slate-600">
+            <span class="whitespace-nowrap">容量: <strong>${item.size}</strong> pt</span>
+            <span class="whitespace-nowrap">重さ: <strong>${item.weight}</strong> g</span>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function toggleItem(itemId) {
+      const item = ITEMS_DATA.find(i => i.id === itemId);
+      if (!item) return;
+
+      const idx = gameState.selectedItems.findIndex(i => i.id === itemId);
+      if (idx >= 0) {
+        gameState.selectedItems.splice(idx, 1);
+        playSound('remove');
+      } else {
+        const currentCap = gameState.selectedItems.reduce((sum, i) => sum + i.size, 0);
+        if (currentCap + item.size > MAX_CAPACITY + 10) {
+          playSound('warning');
+          showToast('ポーチが完全にパンパンで入りません！', 'warn');
+          return;
+        }
+        gameState.selectedItems.push(item);
+        playSound('select');
+      }
+
+      renderItemGrid();
+      updatePouchUI();
+    }
+
+    function updatePouchUI() {
+      const currentCap = gameState.selectedItems.reduce((sum, i) => sum + i.size, 0);
+      const currentWeight = gameState.selectedItems.reduce((sum, i) => sum + i.weight, 0);
+      const count = gameState.selectedItems.length;
+
+      document.getElementById('pouch-item-count').textContent = `${count} 個`;
+
+      // 容量ゲージ
+      const capBar = document.getElementById('meter-capacity-bar');
+      const capText = document.getElementById('meter-capacity-text');
+      const capAlert = document.getElementById('meter-capacity-alert');
+      
+      const capPercent = Math.min(100, Math.round((currentCap / MAX_CAPACITY) * 100));
+      capBar.style.width = `${capPercent}%`;
+      capText.textContent = `${currentCap} / ${MAX_CAPACITY} pt`;
+
+      if (currentCap > MAX_CAPACITY) {
+        capBar.className = 'h-full bg-rose-500 rounded-full transition-all duration-300';
+        capText.className = 'text-rose-600 font-extrabold';
+        capAlert.classList.remove('hidden');
+      } else {
+        capBar.className = 'h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-300';
+        capText.className = 'text-slate-800 font-extrabold';
+        capAlert.classList.add('hidden');
+      }
+
+      // 重量ゲージ
+      const weightBar = document.getElementById('meter-weight-bar');
+      const weightText = document.getElementById('meter-weight-text');
+      const weightStatus = document.getElementById('meter-weight-status');
+
+      const weightPercent = Math.min(100, Math.round((currentWeight / RECOMMENDED_WEIGHT_MAX) * 100));
+      weightBar.style.width = `${weightPercent}%`;
+      weightText.textContent = `${currentWeight} g`;
+
+      if (currentWeight > RECOMMENDED_WEIGHT_MAX * 1.5) {
+        weightBar.className = 'h-full bg-rose-500 rounded-full transition-all duration-300';
+        weightStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-500"></i> 重すぎ！肩が抜けて歩けなくなります';
+        weightStatus.className = 'text-xs text-rose-600 font-bold mt-1';
+      } else if (currentWeight > RECOMMENDED_WEIGHT_MAX) {
+        weightBar.className = 'h-full bg-amber-500 rounded-full transition-all duration-300';
+        weightStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation text-amber-500"></i> やや重め。持ち歩きには少し気合いが必要';
+        weightStatus.className = 'text-xs text-amber-700 font-bold mt-1';
+      } else {
+        weightBar.className = 'h-full bg-gradient-to-r from-sky-400 to-emerald-400 rounded-full transition-all duration-300';
+        weightStatus.innerHTML = '<i class="fa-solid fa-feather text-emerald-500"></i> 身軽で毎日持てるベストな重さ！';
+        weightStatus.className = 'text-xs text-emerald-600 font-bold mt-1';
+      }
+
+      // ポーチ内スロット
+      const grid = document.getElementById('pouch-items-grid');
+      const emptyMsg = document.getElementById('pouch-empty-msg');
+      grid.innerHTML = '';
+
+      if (gameState.selectedItems.length === 0) {
+        emptyMsg.classList.remove('hidden');
+      } else {
+        emptyMsg.classList.add('hidden');
+        gameState.selectedItems.forEach(item => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'group bg-white border border-orange-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2 cursor-pointer hover:border-rose-400 hover:bg-rose-50 transition shadow-2xs';
+          itemEl.onclick = () => toggleItem(item.id);
+          itemEl.title = `${item.name}（タップで取り出す）`;
+
+          itemEl.innerHTML = `
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="app-pouch-item font-extrabold text-slate-800 truncate group-hover:text-rose-700">${item.name}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-xs text-slate-400 font-mono whitespace-nowrap">${item.weight}g</span>
+              <span class="text-slate-400 group-hover:text-rose-600 text-xs font-bold">✕</span>
+            </div>
+          `;
+          grid.appendChild(itemEl);
+        });
+      }
+    }
+
+    function clearPouch() {
+      gameState.selectedItems = [];
+      playSound('remove');
+      renderItemGrid();
+      updatePouchUI();
+      showToast('ポーチを空にしました', 'info');
+    }
+
+    // --- 5. シミュレーション実行ロジック ---
+
+    
+    
+    function startSimulation() {
+      if (gameState.selectedItems.length === 0) {
+        playSound('warning');
+        showToast('ポーチにアイテムが1つも入っていません！', 'warn');
+        return;
+      }
+
+      const currentCap = gameState.selectedItems.reduce((sum, i) => sum + i.size, 0);
+      if (currentCap > MAX_CAPACITY) {
+        playSound('warning');
+        showToast('容量オーバーです！チャックが閉まらないので減らしてください。', 'warn');
+        return;
+      }
+
+      // ==========================================
+      // シミュレーションキューの構築
+      // 【方針】
+      // 1. メイン試練（第1章〜第5章）の中に、裏技アイテムや所持アイテムの活躍を完全統合！
+      // 2. メイン試練で使われる用途（ライト・充電・トイレ・防寒・手当て）のアイテムは、道中エピソードで重複して2回出さない（完全禁止）。
+      // 3. 道中エピソードは、メイン試練とは用途が全く異なる「お菓子・飲食」「心のケア・ホビー」「身だしなみ・ネタ品」を持っている時だけ、小休憩として最大1〜2回だけ適宜差し込む。
+      // ==========================================
+      const mainTrialItemIds = new Set(STORY_STAGES.flatMap(s => [...s.targetIds, ...s.fallbackIds]));
+
+      // メイン試練の用途とは完全に異なるアイテム（おやつ、ぬいぐるみ、息抜きグッズ、ネタ品）
+      const distinctBreakItems = gameState.selectedItems.filter(item => {
+        // メイン試練で使われる用途のアイテム（ライト・充電器・トイレ・防寒具など）は絶対に除外！
+        if (mainTrialItemIds.has(item.id)) return false;
+        return (
+          item.category === 'food' || 
+          item.category === 'fun' || 
+          item.category === 'ng' || 
+          ['dental_floss', 'nail_clipper_mini', 'aroma_spray', 'folding_fan'].includes(item.id)
+        );
+      });
+
+      // 最大1〜2個の息抜きアイテムをピックアップ
+      const pickedBreaks = distinctBreakItems.sort(() => 0.5 - Math.random()).slice(0, 2);
+
+      let queue = [];
+      STORY_STAGES.forEach((stage) => {
+        // メインステージ（第1章〜第5章：裏技もこの中に完全統合）
+        queue.push({
+          type: 'base',
+          stageNum: stage.stageNum,
+          stageName: stage.stageName,
+          data: stage
+        });
+
+        // 用途が全く異なるお菓子やホビーを持っている場合のみ、第2章または第4章の後に息抜きとして1回だけ挟む
+        if (stage.stageNum === 2 && pickedBreaks.length > 0) {
+          const brkItem = pickedBreaks.shift();
+          queue.push({
+            type: 'special',
+            stageNum: 2,
+            stageName: '駅前広場でのひと息',
+            breakTitle: '【駅前でのひとコマ】ちょっと一息・エネルギー補給',
+            data: brkItem
+          });
+        } else if (stage.stageNum === 4 && pickedBreaks.length > 0) {
+          const brkItem = pickedBreaks.shift();
+          queue.push({
+            type: 'special',
+            stageNum: 4,
+            stageName: '夜道の途中で小休止',
+            breakTitle: '【夜道のひとコマ】疲れた心と身体をリフレッシュ',
+            data: brkItem
+          });
+        }
+      });
+
+      gameState.simQueue = queue;
+      gameState.simStep = 0;
+      gameState.simHp = 100;
+      gameState.simResults = [];
+
+      playSound('select');
+      showScreen('screen-sim');
+      renderSimStep();
+    }
+
+        // バッジ生成ヘルパー関数（テンプレートリテラルの入れ子を排除し安全にDOM生成）
+    function getMatchedBadgeHtml(i, isTarget) {
+      const bg = i.isHack ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-orange-100 text-orange-900 border-orange-200';
+      const icon = i.isHack ? '💡' : '🎒';
+      const label = i.isHack ? '<span class="text-xs bg-amber-600 text-white px-1.5 py-0.2 rounded font-bold">裏技</span>' : (isTarget ? '<span class="text-xs bg-orange-600 text-white px-1.5 py-0.2 rounded font-bold">本命</span>' : '<span class="text-xs bg-slate-600 text-white px-1.5 py-0.2 rounded font-bold">工夫代用</span>');
+      return '<span class="app-badge px-3 py-1 rounded-xl font-extrabold flex items-center gap-1.5 shadow-xs border ' + bg + '"><span>' + icon + '</span><span>' + i.name + '</span>' + label + '</span>';
+    }
+
+    function getResultBadgeHtml(i) {
+      const bg = i.isHack ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-orange-100 text-orange-900 border-orange-200';
+      const icon = i.isHack ? '💡' : '🎒';
+      return '<span class="app-badge px-2.5 py-0.5 rounded-lg font-black flex items-center gap-1 border ' + bg + '"><span>' + icon + '</span><span>' + i.name + '</span></span>';
+    }
+
+    function renderSimStep() {
+      const qItem = gameState.simQueue[gameState.simStep];
+      const isSpecial = qItem.type === 'special';
+
+      const typeBadge = document.getElementById('sim-event-type-badge');
+      const stepBadge = document.getElementById('sim-step-badge');
+      const titleEl = document.getElementById('sim-title');
+      const descEl = document.getElementById('sim-desc');
+      const hpBar = document.getElementById('sim-hp-bar');
+
+      const statusIcon = document.getElementById('sim-status-icon');
+      const statusBadge = document.getElementById('sim-status-badge');
+      const targetItemName = document.getElementById('sim-target-item-name');
+      const headlineEl = document.getElementById('sim-result-headline');
+      const detailEl = document.getElementById('sim-result-detail');
+      const tipText = document.getElementById('sim-tip-text');
+
+      const comboBadge = document.getElementById('sim-combo-badge');
+      const matchedBox = document.getElementById('sim-matched-items-box');
+
+      stepBadge.textContent = '進捗: ' + (gameState.simStep + 1) + ' / ' + gameState.simQueue.length;
+
+      if (isSpecial) {
+        // --- 道中のひとコマ（お菓子・心のケア・息抜き） ---
+        const item = qItem.data;
+
+        typeBadge.textContent = item.category === 'food' ? '🍬 道中のエネルギー補給・息抜き' : (item.category === 'fun' ? '🧸 心のケア・気分転換' : '🎒 ちょっとした小休止・ハプニング');
+        typeBadge.className = 'app-badge font-extrabold tracking-wider text-purple-400';
+        
+        titleEl.textContent = qItem.breakTitle || ('【道中のひとコマ】カバンに入っていた「' + item.name + '」！');
+        descEl.textContent = '避難と移動で緊張と疲労が続く中、ポーチから「' + item.name + '」を取り出してみると…！？';
+
+        headlineEl.textContent = '「' + item.name + '」で心と身体をリフレッシュ！';
+        detailEl.textContent = item.episode;
+        tipText.textContent = item.desc;
+
+        comboBadge.classList.add('hidden');
+
+        matchedBox.classList.remove('hidden');
+        matchedBox.innerHTML = `
+          <span class="app-card-meta font-extrabold text-slate-700 whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-heart text-pink-500"></i>ほっこりアイテム:
+          </span>
+          <span class="app-badge px-3 py-1 rounded-xl font-extrabold flex items-center gap-1.5 shadow-xs bg-purple-100 text-purple-900 border border-purple-200">
+            <span>${item.category === 'food' ? '🍬' : (item.category === 'fun' ? '🧸' : '✨')}</span>
+            <span>${item.name}</span>
+            <span class="text-xs bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">${item.catLabel}</span>
+          </span>
+        `;
+
+        playSound('select');
+        gameState.simHp = Math.min(100, gameState.simHp + 5);
+        statusIcon.className = 'hidden';
+        statusBadge.className = 'app-badge font-extrabold px-3 py-1 rounded-full whitespace-nowrap bg-purple-100 text-purple-700';
+        statusBadge.textContent = '心のリフレッシュ！';
+        targetItemName.textContent = '【' + item.name + '】で息抜き';
+
+        gameState.simResults.push({
+          type: 'special',
+          item: item,
+          success: true,
+          headline: headlineEl.textContent,
+          detail: item.episode
+        });
+
+      } else {
+        // --- メイン試練（第1章〜第5章：裏技もここに完全統合） ---
+        const ev = qItem.data;
+        typeBadge.textContent = ev.stageName || '帰宅サバイバル試練';
+        typeBadge.className = 'app-badge font-extrabold tracking-wider text-orange-400';
+        titleEl.textContent = ev.title;
+        descEl.textContent = ev.desc;
+
+        // 複数アイテム＆裏技判定：ポーチ内から該当するすべての本命アイテム・代用アイテムを取得
+        const matchedTargets = gameState.selectedItems.filter(i => ev.targetIds.includes(i.id));
+        const matchedFallbacks = gameState.selectedItems.filter(i => ev.fallbackIds.includes(i.id));
+        const allMatched = [...matchedTargets, ...matchedFallbacks];
+
+        let success = false;
+        let usedText = '';
+        let head = '';
+        let det = '';
+
+        if (allMatched.length > 0) {
+          success = true;
+
+          // 裏技アイテムが含まれているかチェック
+          const hackItem = allMatched.find(i => i.isHack);
+          const otherItems = allMatched.filter(i => i.id !== (hackItem ? hackItem.id : ''));
+          const otherNames = otherItems.map(i => i.name).join('・');
+          const extraNote = otherItems.length > 0 ? ('（さらに【' + otherNames + '】も大いに役立ちました！）') : '';
+
+          if (hackItem) {
+            // 【裏技炸裂モード】裏技の強力な効果をメイン試練の見出し・詳細に完全合体！
+            comboBadge.classList.remove('hidden');
+            comboBadge.textContent = otherItems.length > 0 ? ('💡 裏技炸裂 ＆ ' + allMatched.length + '品強力連携！') : '💡 ネットの裏技炸裂！';
+            comboBadge.className = 'app-badge font-black px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap shadow-xs animate-bounceSmall';
+
+            if (hackItem.id === 'usb_converter') {
+              head = '【裏技炸裂！】USB端子変換アダプタで端子違いを一発解決！急速充電＆安否連絡完了！';
+              det = '駅前で親切な人に充電器を借りましたが、ケーブル端子が合わず絶望…しかしポーチから親指大の【USB端子変換アダプタ】を取り出して一撃接続！急速充電に成功し、家族へ無事に安否を知らせることができました！' + extraNote;
+            } else if (hackItem.id === 'pet_sheet') {
+              head = '【裏技炸裂！】ポリ袋＋ペットシーツで即席トイレ完成！驚異の吸水力でピンチ完全脱出！';
+              det = '待機場所のトイレは水が止まり全面閉鎖…しかしポリ袋に【ペットシーツ】を敷き詰めて即席トイレ化！驚異の高分子ポリマーが尿を一瞬でジェル化し、漏れも臭いも完全にシャットアウト！周囲を汚さず衛生的に乗り切りました！' + extraNote;
+            } else if (hackItem.id === 'blister_pads') {
+              head = '【裏技炸裂！】靴擦れ専用ジェルパッドでかかとの激痛ゼロに！夜道をスタスタ歩き切る！';
+              det = '長距離歩行でかかとの皮がめくれ、一歩ごとに激痛が走る大ピンチ…しかし【靴擦れ専用ジェル保護パッド】を密着させると靴の摩擦圧力がゼロに！痛みが嘘のように消え去り、無事に目的地まで歩き続けられました！' + extraNote;
+            } else if (hackItem.id === 'penlight_otaku') {
+              head = '【裏技炸裂！】オタク用高輝度ペンライト点灯！圧倒的な爆光で周囲ごと安全に脱出！';
+              det = '停電の地下街でスマホのライトでは光量不足…そこで【オタク用ペンライト】を最大輝度で点灯！暗闇の通路全体をパッと照らし出し、周囲の人々も誘導しながら割れたガラスを避けて安全に地上へ脱出しました！' + extraNote;
+            } else if (hackItem.id === 'bottle_shower_cap') {
+              head = '【裏技炸裂！】ペットボトル用ジョーロキャップでわずかな水を節水シャワー化！';
+              det = '断水で水が貴重な中、ペットボトルに【ジョーロキャップ】を装着！わずかコップ半分の水で傷口を優しく洗浄し、手を清潔に保つことに成功！周囲からも「それすごい！」と絶賛されました！' + extraNote;
+            } else if (hackItem.id === 'eyebrow_pencil') {
+              head = '【裏技炸裂！】眉ペンが油性マジック代わりに！段ボールに家族への伝言を濃く記入！';
+              det = '公衆電話に行列ができる中、油性の【アイブロウペンシル】を取り出して段ボールに「○時、○○避難所へ向かう」と濃くハッキリ記入！さらに鏡を見て身だしなみを整え、人前に出る安心感も取り戻せました！' + extraNote;
+            } else {
+              head = '【裏技炸裂！】' + hackItem.name + 'の機転で見事にピンチ回避！';
+              det = hackItem.episode + ' ' + extraNote;
+            }
+
+            usedText = '【' + hackItem.name + '】の裏技が決定打に！';
+            gameState.simHp = Math.min(100, gameState.simHp + 10 + (allMatched.length - 1) * 5);
+
+          } else {
+            // 通常アイテム・複数アイテム連携
+            if (allMatched.length >= 2) {
+              comboBadge.classList.remove('hidden');
+              comboBadge.textContent = '✨ ' + allMatched.length + '品の強力連携！';
+              comboBadge.className = 'app-badge font-black px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap shadow-xs';
+              gameState.simHp = Math.min(100, gameState.simHp + (allMatched.length - 1) * 5);
+            } else {
+              comboBadge.classList.add('hidden');
+            }
+
+            if (matchedTargets.length > 0 && matchedFallbacks.length > 0) {
+              usedText = allMatched.map(i => '【' + i.name + '】').join(' ＋ ') + ' が強力連携！';
+              head = ev.successHead + '（工夫グッズとの合わせ技！）';
+              det = ev.successDesc + ' 本命の【' + matchedTargets.map(i => i.name).join('・') + '】に加え、【' + matchedFallbacks.map(i => i.name).join('・') + '】も併用して完璧に対処できました！';
+            } else if (matchedTargets.length >= 2) {
+              usedText = matchedTargets.map(i => '【' + i.name + '】').join(' ＋ ') + ' の二重対策！';
+              head = ev.successHead + '（備えが万全！）';
+              det = ev.successDesc + ' 【' + matchedTargets.map(i => i.name).join('】と【') + '】の両方を所持していたため、余裕を持って対処できました！';
+            } else if (matchedTargets.length === 1) {
+              usedText = '【' + matchedTargets[0].name + '】を完璧に活用！';
+              head = ev.successHead;
+              det = ev.successDesc;
+            } else if (matchedFallbacks.length >= 2) {
+              usedText = matchedFallbacks.map(i => '【' + i.name + '】').join(' ＋ ') + ' を駆使して代用！';
+              head = ev.fallbackHead + '（複数の知恵が炸裂！）';
+              det = ev.fallbackDesc + ' 【' + matchedFallbacks.map(i => i.name).join('】と【') + '】の知恵を組み合わせて見事に急場をしのぎました！';
+              gameState.simHp = Math.max(0, gameState.simHp - 5);
+            } else {
+              usedText = '【' + matchedFallbacks[0].name + '】で機転を利かせて代用！';
+              head = ev.fallbackHead;
+              det = ev.fallbackDesc;
+              gameState.simHp = Math.max(0, gameState.simHp - 10);
+            }
+          }
+
+          // 役立ったアイテムのバッジ一覧を生成
+          matchedBox.classList.remove('hidden');
+          matchedBox.innerHTML = `
+            <span class="app-card-meta font-extrabold text-slate-700 whitespace-nowrap flex items-center gap-1">
+              <i class="fa-solid fa-circle-check text-emerald-500"></i>役立ったアイテム (${allMatched.length}品):
+            </span>
+            <div class="flex items-center gap-2 flex-wrap">
+              ${allMatched.map(i => getMatchedBadgeHtml(i, ev.targetIds.includes(i.id))).join('')}
+            </div>
+          `;
+
+        } else {
+          // 対応アイテムなし
+          success = false;
+          comboBadge.classList.add('hidden');
+          usedText = '対応アイテムがポーチにない…！';
+          head = ev.failHead;
+          det = ev.failDesc;
+          gameState.simHp = Math.max(0, gameState.simHp - 25);
+
+          matchedBox.classList.remove('hidden');
+          matchedBox.innerHTML = `
+            <span class="app-card-meta font-bold text-rose-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+              ※このトラブルに対応できるアイテムがポーチに入っていませんでした
+            </span>
+          `;
+        }
+
+        targetItemName.textContent = usedText;
+        headlineEl.textContent = head;
+        detailEl.textContent = det;
+        tipText.textContent = ev.tip;
+
+        if (success) {
+          playSound('success');
+          statusIcon.className = 'hidden';
+          statusIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+          statusBadge.className = 'app-badge font-extrabold px-3 py-1 rounded-full whitespace-nowrap bg-emerald-100 text-emerald-700';
+          statusBadge.textContent = 'ピンチ回避！';
+        } else {
+          playSound('fail');
+          statusIcon.className = 'hidden';
+          statusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+          statusBadge.className = 'app-badge font-extrabold px-3 py-1 rounded-full whitespace-nowrap bg-rose-100 text-rose-700';
+          statusBadge.textContent = 'ピンチ直撃！';
+        }
+
+        gameState.simResults.push({
+          type: 'base',
+          event: ev,
+          success: success,
+          hasTarget: matchedTargets.length > 0,
+          hasFallback: matchedFallbacks.length > 0,
+          matchedItems: allMatched,
+          headline: head,
+          detail: det
+        });
+      }
+
+      hpBar.style.width = Math.max(0, gameState.simHp) + '%';
+
+      const nextBtn = document.getElementById('btn-next-event');
+      if (gameState.simStep >= gameState.simQueue.length - 1) {
+        nextBtn.innerHTML = '<span>実験結果・全アイテム図鑑を見る</span> <i class="fa-solid fa-flag-checkered"></i>';
+      } else {
+        nextBtn.innerHTML = '<span>次の展開へ</span> <i class="fa-solid fa-arrow-right"></i>';
+      }
+    }
+
+    function nextSimulationEvent() {
+      gameState.simStep++;
+      if (gameState.simStep < gameState.simQueue.length) {
+        renderSimStep();
+      } else {
+        showResults();
+      }
+    }
+
+    // --- 6. 結果発表＆全アイテム結末図鑑 ---
+
+    function showResults() {
+      playSound('success');
+      showScreen('screen-result');
+
+      const currentCap = gameState.selectedItems.reduce((sum, i) => sum + i.size, 0);
+      const currentWeight = gameState.selectedItems.reduce((sum, i) => sum + i.weight, 0);
+
+      // スコア計算
+      let score = 50;
+      let solveCount = 0;
+
+      gameState.simResults.forEach(res => {
+        if (res.type === 'base') {
+          if (res.hasTarget) { 
+            score += 10; 
+            solveCount++; 
+            // 複数役立ちボーナス
+            if (res.matchedItems && res.matchedItems.length > 1) {
+              score += (res.matchedItems.length - 1) * 3;
+            }
+          } else if (res.hasFallback) { 
+            score += 6; 
+            solveCount++; 
+            if (res.matchedItems && res.matchedItems.length > 1) {
+              score += (res.matchedItems.length - 1) * 2;
+            }
+          } else { 
+            score -= 8; 
+          }
+        } else if (res.type === 'special') {
+          if (res.item.episodeType === 'great') score += 8;
+          else if (res.item.episodeType === 'good') score += 5;
+          else if (res.item.episodeType === 'bad') score -= 15;
+        }
+      });
+
+      if (currentWeight <= 350) score += 5;
+      else if (currentWeight > 1000) score -= 20;
+
+      score = Math.max(10, Math.min(100, score));
+
+      let rank = 'C';
+      let title = '気ままな散歩サバイバー';
+      let subtitle = 'ユニークなアイテムで楽しめましたが、いざという時の必須品がもう少しあると安心です。';
+
+      if (score >= 90) {
+        rank = 'S';
+        title = '裏技防災マスター！';
+        subtitle = '無駄なく軽量で、必須防災・ネットの裏技・心のケアを完璧に両立させた理想のポーチです！';
+      } else if (score >= 75) {
+        rank = 'A';
+        title = '頼れる安心エキスパート';
+        subtitle = '主要なトラブルをしっかりクリア。独自の工夫と裏技がキラリと光る構成です。';
+      } else if (score >= 60) {
+        rank = 'B';
+        title = '個性派サバイバルチャレンジャー';
+        subtitle = '面白いアイテムが活躍しましたが、基本アイテム（ライトやトイレ）を足すと完璧です。';
+      } else {
+        rank = 'D';
+        title = 'お荷物過多？大波乱サバイバー';
+        subtitle = '重すぎるアイテムや突拍子もないアイテムで大苦戦！でも実験としては大成功です！';
+      }
+
+      document.getElementById('result-title').textContent = title;
+      document.getElementById('result-subtitle').textContent = subtitle;
+      document.getElementById('result-score').innerHTML = `${score}<span class="text-sm font-normal">点</span>`;
+      document.getElementById('result-rank').textContent = rank;
+
+      document.getElementById('result-cap-stat').textContent = `${currentCap} / ${MAX_CAPACITY} pt`;
+      document.getElementById('result-weight-stat').textContent = `${currentWeight} g ${currentWeight <= 500 ? '(軽量・適正)' : '(重め)'}`;
+      document.getElementById('result-solve-stat').textContent = `${gameState.simResults.length} 件 遭遇`;
+
+      // 全アイテムの個別結末図鑑
+      const episodesContainer = document.getElementById('result-all-items-episodes');
+      document.getElementById('result-item-total-count').textContent = gameState.selectedItems.length;
+      episodesContainer.innerHTML = '';
+
+      gameState.selectedItems.forEach(item => {
+        const card = document.createElement('div');
+        let badgeColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        let badgeLabel = '◎ 大活躍！';
+        if (item.isHack) {
+          badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+          badgeLabel = '💡 裏技炸裂！';
+        } else if (item.episodeType === 'good') {
+          badgeColor = 'bg-blue-100 text-blue-700 border-blue-200';
+          badgeLabel = '◯ 役立った';
+        } else if (item.episodeType === 'funny') {
+          badgeColor = 'bg-amber-100 text-amber-800 border-amber-200';
+          badgeLabel = '✨ 珍エピソード';
+        } else if (item.episodeType === 'bad') {
+          badgeColor = 'bg-rose-100 text-rose-700 border-rose-200';
+          badgeLabel = '✕ お荷物・自爆';
+        }
+
+        card.className = 'p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col gap-2';
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2">
+              <span class="app-card-title font-black text-slate-800">${item.name}</span>
+              <span class="app-card-meta text-slate-400 font-mono whitespace-nowrap">(${item.weight}g)</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full app-badge font-black border whitespace-nowrap ${badgeColor}">${badgeLabel}</span>
+          </div>
+          <p class="app-card-desc text-slate-700 bg-white p-3 rounded-xl border border-slate-100">
+            ${item.episode}
+          </p>
+        `;
+        episodesContainer.appendChild(card);
+      });
+
+      // 被災場所から避難所・自宅への帰宅サバイバル振り返り
+      const eventsList = document.getElementById('result-events-list');
+      eventsList.innerHTML = '';
+      const baseResults = gameState.simResults.filter(r => r.type === 'base');
+      baseResults.forEach((res, idx) => {
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border flex flex-col gap-2 ${res.success ? 'bg-emerald-50/60 border-emerald-200' : 'bg-rose-50/60 border-rose-200'}`;
+        
+        let itemsHtml = '';
+        if (res.matchedItems && res.matchedItems.length > 0) {
+          itemsHtml = `
+            <div class="flex items-center gap-1.5 flex-wrap my-1 p-2 bg-white/80 rounded-xl border border-slate-200/60">
+              <span class="text-xs font-black text-slate-600 whitespace-nowrap">役立ったアイテム (${res.matchedItems.length}品):</span>
+              ${res.matchedItems.map(item => getResultBadgeHtml(item)).join('')}
+            </div>
+          `;
+        } else {
+          itemsHtml = `
+            <div class="text-xs font-bold text-rose-600 my-1">
+              ※対応できるアイテムがポーチに入っていませんでした
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <span class="app-card-title font-extrabold text-slate-800">${res.success ? '⭕' : '❌'} トラブル${idx + 1}: ${res.event.title}</span>
+            <span class="app-badge font-extrabold whitespace-nowrap px-3 py-1 rounded-full ${res.success ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${res.success ? '回避成功' : 'ピンチ直撃'}</span>
+          </div>
+          ${itemsHtml}
+          <p class="text-slate-700 app-card-desc">${res.detail}</p>
+        `;
+        eventsList.appendChild(card);
+      });
+    }
+
+    function restartGame() {
+      playSound('select');
+      showScreen('screen-intro');
+    }
+
+    function shareResult() {
+      const score = document.getElementById('result-score').innerText;
+      const rank = document.getElementById('result-rank').innerText;
+      const title = document.getElementById('result-title').innerText;
+      const itemCount = gameState.selectedItems.length;
+      
+      const shareText = `【防災ポーチシミュレーター】\n私の持ち物（${itemCount}品）の実験結果はスコア ${score}（ランク ${rank}）「${title}」でした！\nネットの裏技やいろんな持ち物を試してみてね✨\n#防災ポーチ #0次防災 #防災シミュレーター`;
+
+      navigator.clipboard.writeText(shareText).then(() => {
+        showToast('結果をクリップボードにコピーしました！', 'success');
+      }).catch(() => {
+        showToast('コピーに失敗しました', 'warn');
+      });
+    }
+
+    function openKnowledgeModal() {
+      playSound('select');
+      document.getElementById('modal-knowledge').classList.remove('hidden');
+    }
+
+    function closeKnowledgeModal() {
+      playSound('remove');
+      document.getElementById('modal-knowledge').classList.add('hidden');
+    }
+
+    
+    // --- 文字サイズ切り替え (レイアウトを崩さず文字サイズと列数を最適化) ---
+    function changeTextSize(sizeClass, btnEl) {
+      document.body.classList.remove('size-normal', 'size-large', 'size-xlarge', 'size-zoom');
+      document.body.classList.add(sizeClass);
+
+      // ZOOM極大の時はアイテム一覧を1列〜ゆったり2列にして文字折れを防ぐ
+      const itemsGrid = document.getElementById('items-grid');
+      if (itemsGrid) {
+        if (sizeClass === 'size-zoom') {
+          itemsGrid.className = 'grid grid-cols-1 xl:grid-cols-2 gap-3.5 max-h-[70vh] overflow-y-auto pr-1';
+        } else {
+          itemsGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto pr-1';
+        }
+      }
+
+      document.querySelectorAll('.size-btn').forEach(b => {
+        b.className = 'size-btn px-2.5 py-1 text-xs font-extrabold rounded-lg transition text-slate-600 hover:text-slate-900 whitespace-nowrap';
+      });
+      const targetBtn = btnEl || document.querySelector(`.size-btn[data-size="${sizeClass}"]`);
+      if (targetBtn) {
+        targetBtn.className = 'size-btn px-2.5 py-1 text-xs font-extrabold rounded-lg transition bg-orange-500 text-white shadow-xs whitespace-nowrap';
+      }
+
+      try {
+        localStorage.setItem('bousai_text_size', sizeClass);
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      let savedSize = 'size-large';
+      try {
+        savedSize = localStorage.getItem('bousai_text_size') || 'size-large';
+      } catch (e) {}
+      if (!['size-normal', 'size-large', 'size-xlarge', 'size-zoom'].includes(savedSize)) {
+        savedSize = 'size-large';
+      }
+      changeTextSize(savedSize);
+    });
+
+    function showToast(msg, type = 'info') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastMsg.textContent = msg;
+      if (type === 'success') toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+      else if (type === 'warn') toastIcon.className = 'fa-solid fa-triangle-exclamation text-amber-400';
+      else toastIcon.className = 'fa-solid fa-circle-info text-sky-400';
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
